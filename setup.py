@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="dsPyLib",
     keywords="dsPyLib",
-    version="0.0.5",
+    version="0.0.7",
     author="Dragon Sun",
     author_email="dragonsun7@163.com",
     license="MIT",
@@ -26,6 +26,6 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        'psycopg2-binary>=2.7.5'
+        "psycopg2-binary >= 2.7.5"
     ]
 )
