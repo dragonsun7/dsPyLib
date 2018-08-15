@@ -36,7 +36,7 @@ def init_logger_with_level(stream_level=logging.DEBUG, file_level=logging.ERROR)
     fh.setFormatter(formatter)
 
     ret = logging.getLogger(app_name)
-    # ret.setLevel(logging.ERROR)
+    ret.setLevel(stream_level)
     ret.addHandler(ch)
     ret.addHandler(fh)
     return ret
