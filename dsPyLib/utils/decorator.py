@@ -3,6 +3,7 @@ __author__ = 'Dragon Sun'
 
 
 import time
+import threading
 from functools import wraps
 
 
@@ -41,3 +42,33 @@ def elapsed(callback):
 
         return result
     return wrapper
+
+
+"""
+    定时执行方法的修饰器
+    使用方法：
+        from dsPyLib.utils.decorator import *
+        
+        # interval 每隔多少秒执行(默认1); count 一共执行多少次(默认None，即不限次数)
+        @timer(interval, count)     
+        def func():
+"""
+
+
+def timer(interval=1, count=None):
+    def _timer(callback):
+        @wraps(callback)
+        def wrapper(*args, **kwargs):
+            def run():
+                loop = 0
+                while (not count) or (count and (loop < count)):
+                    loop += 1
+                    callback(*args, **kwargs)
+                    if count and (loop >= count):
+                        break
+                    time.sleep(interval)
+
+            thread = threading.Thread(target=run)
+            thread.start()
+        return wrapper
+    return _timer
