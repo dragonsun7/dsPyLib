@@ -2,8 +2,26 @@
   <dictionary name="ds">
     <words>
       <w>asctime</w>
+      <w>celerybeat</w>
+      <w>htmlcov</w>
+      <w>infos</w>
+      <w>ipynb</w>
+      <w>jupyter</w>
       <w>levelname</w>
       <w>lineno</w>
+      <w>mkdocs</w>
+      <w>mypy</w>
+      <w>nosetests</w>
+      <w>pycache</w>
+      <w>pyenv</w>
+      <w>pytest</w>
+      <w>ropeproject</w>
+      <w>scrapy</w>
+      <w>spyder</w>
+      <w>spyderproject</w>
+      <w>spyproject</w>
+      <w>venv</w>
+      <w>webassets</w>
     </words>
   </dictionary>
 </component>
