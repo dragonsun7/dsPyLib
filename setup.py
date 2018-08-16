@@ -26,7 +26,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "psycopg2-binary >= 2.7.5"
+        "psycopg2-binary >= 2.7.5",
         "schedule >= 0.5.0"
     ]
 )
