@@ -3,15 +3,21 @@
     <words>
       <w>asctime</w>
       <w>celerybeat</w>
+      <w>dtime</w>
+      <w>fromtimestamp</w>
       <w>htmlcov</w>
       <w>infos</w>
       <w>ipynb</w>
+      <w>isdst</w>
       <w>jupyter</w>
       <w>levelname</w>
       <w>lineno</w>
+      <w>mday</w>
       <w>mkdocs</w>
+      <w>mktime</w>
       <w>mypy</w>
       <w>nosetests</w>
+      <w>postgre</w>
       <w>pycache</w>
       <w>pyenv</w>
       <w>pytest</w>
@@ -20,8 +26,13 @@
       <w>spyder</w>
       <w>spyderproject</w>
       <w>spyproject</w>
+      <w>strftime</w>
+      <w>strptime</w>
+      <w>struct</w>
       <w>venv</w>
+      <w>wday</w>
       <w>webassets</w>
+      <w>yday</w>
     </words>
   </dictionary>
 </component>

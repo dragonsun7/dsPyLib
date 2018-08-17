@@ -4,9 +4,9 @@ __author__ = 'Dragon Sun'
 
 import time
 import threading
-import schedule
-from enum import Enum
 from functools import wraps
+from dsPyLib.utils.datetime import *
+from dsPyLib.utils.scheduler import Scheduler
 
 
 """
@@ -15,7 +15,7 @@ from functools import wraps
         from dsPyLib.utils.decorator import *
         
         @elapsed
-        def func():
+        def func():w
 """
 
 
@@ -80,64 +80,50 @@ def timer(interval=1, count=None):
     计划执行方法的修饰器
     使用方法：
         from dsPyLib.utils.decorator import *
-        
-        @scheduler(start_time, count, interval, unit)     
-        def func():
+
+        @schedule(start='2018-08-17 17:08:12', wp=True, loop=3, interval=1, unit=CycleUnit.minute)
+        def func(s1, s2):
+            print(s1, s2)
+
+        if __name__ == '__main__':
+            func('1', '2')
 """
 
 
-class CycleUnit(Enum):
-    second = 'second'
-    minute = 'minute'
-    hour = 'hour'
-    day = 'day'
-    week = 'week'
-    monday = 'monday'
-    tuesday = 'tuesday'
-    wednesday = 'wednesday'
-    thursday = 'thursday'
-    friday = 'friday'
-    saturday = 'saturday'
-    sunday = 'sunday'
-
-
-def scheduler(start_time=None, count=None, interval=1, unit=CycleUnit.day):
+def schedule(start=None, wp=False, loop=None, interval=1, unit=CycleUnit.day):
     """
     计划执行
-    :param start_time: str, 开始时间，格式：%H:%M，例如：00:00(只有小时及其以上的单位才有效)
-    :param count: int, 执行的次数，如果为None则不限次数
-    :param interval: int, 周期间隔数量(monday到sunday，interval不生效)
-    :param unit: CycleUnit, 周期单位 (例如：每3天执行一次，则 cycle_interval = 3, cycle_unit = CycleUnit.day)
-    :return:
+
+    :param start: str/datetime，开始时间
+        1. None，则采用当前时间
+        2. str，则用"%Y-%m-%d %H:%M:%S"转化为时间
+        3. datetime
+        最后与当前时间取最大值。也就是说，这个值应该设置为一个未来的时间，否则按当前时间处理
+    :param wp: boolean, 是否整点触发
+    :param loop: int, 执行的次数，如果为None则不限次数
+    :param interval: int, 周期的间隔次数
+    :param unit: CycleUnit, 周期单位
+    :return: 无
+
+    示例：
+        @schedule(start='2018-08-17 17:08:12', wp=True, loop=3, interval=1, unit=CycleUnit.minute)
+        表示：
+            如果'2018-08-17 17:08:12'大于当前时间，则从'2018-08-17 17:09:00'开始，每隔1分钟执行一次，共执行3次
+            如果'2018-08-17 17:08:12'小于当前时间，则从当前时间的下一个整分开始，每隔1分钟执行一次，共执行3次
     """
     def _timer(callback):
         @wraps(callback)
         def wrapper(*args, **kwargs):
-            cur_count = list()
-            cur_count.append(0)
-
-            def job(count_list):
-                count_list[0] += 1
-                callback(*args, **kwargs)
-
-            def build_schedule():
-                # 支持复数的周期单位
-                plural_list = (CycleUnit.second, CycleUnit.minute, CycleUnit.hour, CycleUnit.day, CycleUnit.week)
-                # 不支持at的周期单位
-                no_at_list = (CycleUnit.second, CycleUnit.minute)
-
-                is_plural = interval and (interval > 1) and (unit in plural_list)
-                s_interval = str(interval) if is_plural else ''
-                s_unit = unit.value + 's' if is_plural else unit.value
-                s_at = '.at("%s")' % start_time if start_time and (unit not in no_at_list) else ''
-                s_eval = 'schedule.every({interval}).{unit}{at}.do(job, cur_count)'.\
-                    format(interval=s_interval, unit=s_unit, at=s_at)
-                eval(s_eval, {'schedule': schedule, 'job': job, 'cur_count': cur_count})
-
-            build_schedule()
-            loop_count = count if count else 1
-            while cur_count[0] < loop_count:
-                schedule.run_pending()
-                time.sleep(0.5)
+            s = Scheduler()
+            if type(start) is str:
+                start_time = datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S")
+            else:
+                start_time = start
+            dt = max(datetime.datetime.now(), start_time) if start else datetime.datetime.now()
+            if wp:
+                dt = whole_point(dt, unit)
+                dt = next_time(dt, 1, unit)
+            s.add_job(dt, loop, interval, unit, callback, *args, **kwargs)
+            s.start()
         return wrapper
     return _timer

@@ -3,20 +3,19 @@ __author__ = 'Dragon Sun'
 
 
 from dsPyLib.utils.decorator import *
-from dsPyLib.utils.logging import *
 
 
-@scheduler(count=3, interval=3, unit=CycleUnit.second)
-def job1():
-    logger.info('job1')
+@schedule(start='2018-08-17 17:08:12', wp=True, loop=3, interval=1, unit=CycleUnit.minute)
+def func1(s1, s2):
+    print('func1', s1, s2)
 
 
-@scheduler(unit=CycleUnit.minute)
-def job2():
-    logger.info('job2')
+@schedule(interval=2, unit=CycleUnit.second)
+def func2():
+    print('func2')
 
 
 if __name__ == '__main__':
-    job1()
-    job2()
-    print('OK')
+    func1('1', '2')
+    func2()
+    print('xx')
