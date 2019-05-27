@@ -1,9 +1,7 @@
 # -*-coding:utf-8-*-
 __author__ = 'Dragon Sun'
 
-
 from enum import Enum
-
 
 """
     仅支持Bash以及兼容Bash的Shell
@@ -103,7 +101,7 @@ def _style(s, style):
     return style + s + '\033[0m'
 
 
-def color(s, front: FrontColor, background: BackgroundColor=None):
+def color(s, front: FrontColor, background: BackgroundColor = None):
     if background:
         style = '\033[%s;%sm' % (background.value, front.value)
     else:

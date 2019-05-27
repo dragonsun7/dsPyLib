@@ -20,12 +20,12 @@ PostgreSQL 中的占位符与参数
           INSERT INTO drug (org_id, is_local, approval, approval_number)
           VALUES (%(org_id)s, %(is_local)s, %(approval)s, %(approval_number)s)
       '''
-  params = {
-      'org_id': 2,
-      'is_local': True,
-      'approval': 'Z20020171',
-      'approval_number': '国药准字Z20020170'
-  }
+      params = {
+          'org_id': 2,
+          'is_local': True,
+          'approval': 'Z20020171',
+          'approval_number': '国药准字Z20020170'
+      }
 """
 
 
