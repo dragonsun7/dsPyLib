@@ -3,6 +3,7 @@
     <words>
       <w>asctime</w>
       <w>celerybeat</w>
+      <w>dateutil</w>
       <w>dtime</w>
       <w>fromtimestamp</w>
       <w>htmlcov</w>
