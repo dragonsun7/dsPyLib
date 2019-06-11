@@ -1,6 +1,7 @@
 # -*-coding:utf-8-*-
 __author__ = 'Dragon Sun'
 
+import time
 import datetime
 import calendar
 import math
@@ -154,11 +155,13 @@ def timestamp_to_iso(ts):
 
 def iso_to_datetime(s: str) -> datetime.datetime:
     """
-    将ISO8601字符串转换为datetime.datetime
+    将ISO8601字符串转换为datetime.datetime(本地时区)
     :param s: str, ISO8601字符串，例如：'2019-04-13T12:50:00.000Z'
     :return: datetime
     """
-    return date_parser.parse(s)
+    d = date_parser.parse(s)
+    d = d.astimezone(datetime.datetime.now().tzinfo)
+    return d
 
 
 def datetime_to_iso(d: datetime.datetime) -> str:
@@ -172,3 +175,19 @@ def datetime_to_iso(d: datetime.datetime) -> str:
         return d1.isoformat(timespec='milliseconds') + 'Z'
     else:
         return ''
+
+
+def datetime_compare(d1: datetime.datetime, d2: datetime.datetime) -> int:
+    """
+    比较两个日期的大小
+    :param d1: 日期1
+    :param d2: 日期2
+    :return: d1 < d2 => -1; d1 = d2 => 0; d1 > d2 => 1
+    """
+    t1 = time.mktime(d1.timetuple())
+    t2 = time.mktime(d2.timetuple())
+    if t1 < t2:
+        return -1
+    if t1 > t2:
+        return 1
+    return 0
