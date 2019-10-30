@@ -3,7 +3,6 @@ __author__ = 'Dragon Sun'
 
 import psycopg2.extras
 
-
 """
 psycopg2 官方文档：
   http://initd.org/psycopg/docs/index.html
@@ -31,14 +30,14 @@ PostgreSQL 中的占位符与参数
 
 class Postgres(object):
 
-    def __init__(self, host, port, user, password, database):
+    def __init__(self, host, port, user, password, database, cursor_factory=psycopg2.extras.DictCursor):
         self.conn = psycopg2.connect(
             host=host,
             port=port,
             user=user,
             password=password,
             database=database,
-            cursor_factory=psycopg2.extras.DictCursor
+            cursor_factory=cursor_factory
         )
 
     def __del__(self):
