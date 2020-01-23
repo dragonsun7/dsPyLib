@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="dsPyLib",
     keywords="dsPyLib",
-    version="0.0.16",
+    version="0.0.17",
     author="Dragon Sun",
     author_email="dragonsun7@163.com",
     license="MIT",
@@ -27,6 +27,7 @@ setuptools.setup(
     ],
     install_requires=[
         "psycopg2-binary",
-        "python-dateutil"
+        "python-dateutil",
+        "pandas"
     ]
 )
