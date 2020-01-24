@@ -40,13 +40,15 @@ def datetime_to_iso(d: datetime.datetime) -> str:
         return ''
 
 
-def str_to_date(date_str: str, fmt: str = '%Y-%m-%d') -> datetime.date:
+def str_to_date(date_str: str = None, fmt: str = '%Y-%m-%d') -> datetime.date:
     """
     字符串转换为日期
-    :param date_str: 日期字符串，要符合fmt指定的格式
+    :param date_str: 日期字符串，要符合fmt指定的格式(如果为None，则取当前日期)
     :param fmt: 日期字符串格式
     :return: 日期对象
     """
+    if date_str is None:
+        date_str = date_to_str(datetime.datetime.now())
     ret = datetime.datetime.strptime(date_str, fmt)
     return ret
 
