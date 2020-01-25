@@ -2,7 +2,7 @@
 __author__ = 'Dragon Sun'
 __date__ = '2020-01-25 21:10:02'
 
-import pandas
+from dsPyLib.pandas.pandas_config import *
 
 
 def get_col_index(df: pandas.DataFrame, col_name: str) -> int or None:
