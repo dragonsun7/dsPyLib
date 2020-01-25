@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="dsPyLib",
     keywords="dsPyLib",
-    version="0.0.21",
+    version="0.0.22",
     author="Dragon Sun",
     author_email="dragonsun7@163.com",
     license="MIT",
