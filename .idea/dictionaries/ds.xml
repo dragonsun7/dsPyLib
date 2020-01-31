@@ -1,6 +1,9 @@
 <component name="ProjectDictionaryState">
   <dictionary name="ds">
     <words>
+      <w>aliyun</w>
+      <w>aliyuncs</w>
+      <w>appkey</w>
       <w>asctime</w>
       <w>celerybeat</w>
       <w>dateutil</w>
@@ -16,9 +19,13 @@
       <w>mday</w>
       <w>mkdocs</w>
       <w>mktime</w>
+      <w>mpeg</w>
       <w>mypy</w>
+      <w>nchannels</w>
       <w>nosetests</w>
+      <w>nrate</w>
       <w>postgre</w>
+      <w>pyaudio</w>
       <w>pycache</w>
       <w>pyenv</w>
       <w>pytest</w>
@@ -33,6 +40,7 @@
       <w>venv</w>
       <w>wday</w>
       <w>webassets</w>
+      <w>xiaoyun</w>
       <w>yday</w>
     </words>
   </dictionary>
