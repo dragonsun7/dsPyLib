@@ -1,13 +1,11 @@
 # -*-coding:utf-8-*-
 __author__ = 'Dragon Sun'
 
-
-import time
+# import time
 import threading
 from functools import wraps
 from dsPyLib.utils.datetime import *
 from dsPyLib.utils.scheduler import Scheduler
-
 
 """
     计算函数运行时间的修饰器
@@ -25,6 +23,7 @@ def elapsed(callback):
     :param callback:
     :return:
     """
+
     @wraps(callback)
     def wrapper(*args, **kwargs):
         # 记录下开始时间
@@ -43,6 +42,7 @@ def elapsed(callback):
         print(f'{func_file}, {func_line}, {func_name}() elapsed time: {elapse} seconds.')
 
         return result
+
     return wrapper
 
 
@@ -72,7 +72,9 @@ def timer(interval=1, count=None):
 
             thread = threading.Thread(target=run)
             thread.start()
+
         return wrapper
+
     return _timer
 
 
@@ -111,6 +113,7 @@ def schedule(start=None, wp=False, loop=None, interval=1, unit=CycleUnit.day):
             如果'2018-08-17 17:08:12'大于当前时间，则从'2018-08-17 17:09:00'开始，每隔1分钟执行一次，共执行3次
             如果'2018-08-17 17:08:12'小于当前时间，则从当前时间的下一个整分开始，每隔1分钟执行一次，共执行3次
     """
+
     def _timer(callback):
         @wraps(callback)
         def wrapper(*args, **kwargs):
@@ -125,5 +128,74 @@ def schedule(start=None, wp=False, loop=None, interval=1, unit=CycleUnit.day):
                 dt = next_time(dt, 1, unit)
             s.add_job(dt, loop, interval, unit, callback, *args, **kwargs)
             s.start()
+
         return wrapper
+
     return _timer
+
+
+def singleton(cls):
+    """
+        不支持线程安全的单例模式(效率高)
+        有可能在多线程同时获取对象时，创建多个实例
+        https://juejin.im/post/5e5f59a1518825494822cf99
+
+        @singleton
+        class Foo(object):
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+        foo = Foo()
+    """
+
+    cls.__new_original__ = cls.__new__
+
+    @wraps(cls.__new__)
+    def singleton_new(*args, **kwargs):
+        it = cls.__dict__.get('__it__')
+        if it is not None:
+            return it
+
+        cls.__it__ = it = cls.__new_original__(cls, *args, **kwargs)
+        it.__init_original__(*args, **kwargs)
+        return it
+
+    cls.__new__ = singleton_new
+    cls.__init_original__ = cls.__init__
+    cls.__init__ = object.__init__
+    return cls
+
+
+def sync_singleton(cls):
+    """
+        支持线程安全的单例模式(效率低)
+        https://juejin.im/post/5e5f59a1518825494822cf99
+
+        @singleton
+        class Foo(object):
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+        foo = Foo()
+    """
+
+    cls.__new_original__ = cls.__new__
+
+    @wraps(cls.__new__)
+    def singleton_new(*args, **kwargs):
+        # 同步锁
+        with threading.Lock():
+            it = cls.__dict__.get('__it__')
+            if it is not None:
+                return it
+
+            cls.__it__ = it = cls.__new_original__(cls, *args, **kwargs)
+            it.__init_original__(*args, **kwargs)
+            return it
+
+    cls.__new__ = singleton_new
+    cls.__init_original__ = cls.__init__
+    cls.__init__ = object.__init__
+    return cls
