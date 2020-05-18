@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="dsPyLib",
     keywords="dsPyLib",
-    version="0.0.27",
+    version="0.0.28",
     author="Dragon Sun",
     author_email="dragonsun7@163.com",
     license="MIT",
@@ -25,10 +25,11 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    # install_requires=[
-    #     "psycopg2-binary",
-    #     "python-dateutil",
-    #     "pandas",
-    #     "pyaudio",
-    # ]
+    install_requires=[
+        "psycopg2-binary",
+        "python-dateutil",
+        "pandas",
+        "pyaudio",
+        "peewee",
+    ]
 )

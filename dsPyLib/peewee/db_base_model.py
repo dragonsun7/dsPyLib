@@ -3,7 +3,7 @@ __author__ = 'Dragon Sun'
 __date__ = '2020-05-18 01:15:37'
 
 from peewee import *
-from db_mgr import DBMgr
+from dsPyLib.peewee.db_mgr import DBMgr
 
 
 class DBBaseModel(Model):
