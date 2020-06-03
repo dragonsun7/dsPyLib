@@ -1,7 +1,6 @@
 # -*-coding:utf-8-*-
 __author__ = 'Dragon Sun'
 
-
 """
     输出日志到当前的logs目录下，一天一个日志文件，保留一年
     使用方法：
@@ -11,7 +10,6 @@ __author__ = 'Dragon Sun'
         logger.error(err)
         ...
 """
-
 
 import logging.handlers
 from dsPyLib.utils.misc import *
