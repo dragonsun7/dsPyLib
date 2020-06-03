@@ -41,7 +41,11 @@ def init_logger_with_level(stream_level=logging.DEBUG, file_level=logging.ERROR)
 
 
 def init_logger():
-    return init_logger_with_level(logging.INFO, logging.INFO)
+    app_name = get_app_name()
+    return logging.getLogger(app_name)
+
+    # 不使用文件日志了，MacOS下有权限问题，待解决
+    # return init_logger_with_level(logging.INFO, logging.INFO)
 
 
 logger = init_logger()
