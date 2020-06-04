@@ -40,8 +40,25 @@ def init_logger_with_level(stream_level=logging.DEBUG, file_level=logging.ERROR)
     return ret
 
 
+def init_console_logger_with_level(level=logging.DEBUG):
+    formatter = logging.Formatter('%(asctime)s[%(levelname)s]: %(funcName)s(%(filename)s:%(lineno)d) %(message)s')
+
+    handler = logging.StreamHandler()
+    handler.setLevel(level)
+    handler.setFormatter(formatter)
+
+    app_name = get_app_name()
+    ret = logging.getLogger(app_name)
+    ret.setLevel(level)
+    ret.addHandler(handler)
+    return ret
+
+
 def init_logger():
-    return init_logger_with_level(logging.INFO, logging.INFO)
+    return init_console_logger_with_level(logging.INFO)
+
+    # 暂时不用文件日志，有文件系统权限问题未解决(因为macOS下获取日志文件路径有问题)
+    # return init_logger_with_level(logging.INFO, logging.INFO)
 
 
 logger = init_logger()
