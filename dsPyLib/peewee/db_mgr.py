@@ -112,7 +112,7 @@ class DBMgr(object):
 
         def wrapper(*args, **kwargs):
             try:
-                DBMgr.get_database().connect()
+                DBMgr.get_database().connect(reuse_if_open=True)
             except Exception as e:
                 logging.error(e)
             finally:
