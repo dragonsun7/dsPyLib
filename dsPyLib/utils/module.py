@@ -17,5 +17,4 @@ def get_class(module_path: str, module_name: str, class_name: str):
     path = f'{module_path}.{module_name}'
     module = importlib.import_module(path)
     cls = getattr(module, class_name)
-    ret = cls()
-    return ret
+    return cls
