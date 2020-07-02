@@ -26,6 +26,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
+        "requests",
         "psycopg2-binary",
         "python-dateutil",
         "pandas",
