@@ -32,5 +32,6 @@ setuptools.setup(
         "pandas",
         "pyaudio",
         "peewee",
+        "configparser",
     ]
 )

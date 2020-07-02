@@ -8,6 +8,7 @@ import tempfile
 import http.client
 import urllib.parse
 import json
+import configparser
 from .ali_access_token import AccessToken
 from ..sound.sound import play_wav, play_wav_async
 
@@ -178,11 +179,46 @@ def tts_sync(text_data: str, access_key_id: str, access_key_secret: str, app_key
             os.remove(temp_file)
 
 
+g_access_key_id = '您的AccessKeyId'
+g_access_key_secret = '您的AccessKeySecret'
+g_app_key = '您的AppKey'
+
+
+# 设置全局Keys
+def set_tts_keys(access_key_id: str, access_key_secret: str, app_key: str):
+    global g_access_key_id
+    global g_access_key_secret
+    global g_app_key
+    g_access_key_id = access_key_id
+    g_access_key_secret = access_key_secret
+    g_app_key = app_key
+
+
+# 设置全局Keys
+def set_tts_conf(conf_file: str):
+    """
+    配置文件需要包含如下内容：
+        [auth]
+        access_key_id=
+        access_key_secret=
+
+        [tts]
+        app_key=
+    """
+    config = configparser.ConfigParser()
+    config.read(conf_file)
+    ali_access_key_id = config['auth']['access_key_id']
+    ali_access_key_secret = config['auth']['access_key_secret']
+    tts_app_key = config['tts']['app_key']
+    set_tts_keys(ali_access_key_id, ali_access_key_secret, tts_app_key)
+
+
+def tts_sync2(s: str) -> (bool, str):
+    return tts_sync(s, g_access_key_id, g_access_key_secret, g_app_key)
+
+
 if __name__ == '__main__':
     # 这是一个示例
-    g_access_key_id = '您的AccessKeyId'
-    g_access_key_secret = '您的AccessKeySecret'
-    g_app_key = '您的AppKey'
     g_access_token, g_expire_time = AccessToken.create_token(g_access_key_id, g_access_key_secret)
     if not (g_access_token and g_expire_time):
         print('获取语音合成的access token失败！')
