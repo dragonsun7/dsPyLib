@@ -25,11 +25,13 @@ class CycleUnit(Enum):
     year = 8
 
 
-def to_datetime(d):
+def to_datetime(d) -> datetime.datetime or None:
     """
     接收一个日期时间参数，可以是字符串，可以是datetime，然后返回datetime
     """
-    if isinstance(d, str):
+    if d is None:
+        return None
+    elif isinstance(d, str):
         return parse(d)
     elif isinstance(d, datetime.datetime):
         return d
