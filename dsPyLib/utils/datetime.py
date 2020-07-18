@@ -1,12 +1,13 @@
 # -*-coding:utf-8-*-
 __author__ = 'Dragon Sun'
 
-import time
-import datetime
 import calendar
+import datetime
 import math
+import time
 from enum import Enum
-import dateutil.parser as date_parser
+
+from dateutil.parser import parse
 
 """
 "%Y-%m-%d %H:%M:%S.%f"
@@ -22,6 +23,18 @@ class CycleUnit(Enum):
     month = 6
     quarter = 7
     year = 8
+
+
+def to_datetime(d):
+    """
+    接收一个日期时间参数，可以是字符串，可以是datetime，然后返回datetime
+    """
+    if isinstance(d, str):
+        return parse(d)
+    elif isinstance(d, datetime.datetime):
+        return d
+    else:
+        raise ValueError()
 
 
 def whole_point(dt, unit):
@@ -159,7 +172,7 @@ def iso_to_datetime(s: str) -> datetime.datetime:
     :param s: str, ISO8601字符串，例如：'2019-04-13T12:50:00.000Z'
     :return: datetime
     """
-    d = date_parser.parse(s)
+    d = parse(s)
     d = d.astimezone(datetime.datetime.now().tzinfo)
     return d
 
