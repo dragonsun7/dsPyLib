@@ -2,13 +2,14 @@
 __author__ = 'Dragon Sun'
 __date__ = '2019-12-30 12:49:13'
 
-import os
-import uuid
-import tempfile
-import http.client
-import urllib.parse
-import json
 import configparser
+import http.client
+import json
+import os
+import tempfile
+import urllib.parse
+import uuid
+
 from .ali_access_token import AccessToken
 from ..sound.sound import play_wav, play_wav_async
 
@@ -215,6 +216,10 @@ def set_tts_conf(conf_file: str):
 
 def tts_sync2(s: str) -> (bool, str):
     return tts_sync(s, g_access_key_id, g_access_key_secret, g_app_key)
+
+
+def tts_async2(s: str) -> (bool, str):
+    return tts_async(s, g_access_key_id, g_access_key_secret, g_app_key)
 
 
 if __name__ == '__main__':
