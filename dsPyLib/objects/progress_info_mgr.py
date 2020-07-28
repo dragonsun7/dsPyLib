@@ -3,6 +3,7 @@ __author__ = 'Dragon Sun'
 __date__ = '2020-07-28 18:58:32'
 
 import datetime
+import math
 
 """
     进度信息管理器
@@ -59,8 +60,8 @@ class ProgressInfoManager(object):
         # update
         elapsed = datetime.datetime.now() - self.time_start
         elapsed_seconds = elapsed.seconds
-        whole_seconds = int(elapsed_seconds / self.value * self.total)
-        remain_seconds = int(elapsed_seconds / self.value * (self.total - self.value))
+        whole_seconds = math.ceil(elapsed_seconds / self.value * self.total)
+        remain_seconds = math.ceil(elapsed_seconds / self.value * (self.total - self.value))
         s_whole = self._seconds_to_str(whole_seconds)
         s_elapsed = self._seconds_to_str(elapsed_seconds)
         s_remain = self._seconds_to_str(remain_seconds)
