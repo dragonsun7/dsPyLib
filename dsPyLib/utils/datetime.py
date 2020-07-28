@@ -206,3 +206,13 @@ def datetime_compare(d1: datetime.datetime, d2: datetime.datetime) -> int:
     if t1 > t2:
         return 1
     return 0
+
+
+def time_delta_to_str(d: datetime.timedelta) -> str:
+    second = d.seconds
+    hour = int(second / 3600)
+    second = second - hour * 3600
+    minute = int(second / 60)
+    second = second - minute * 60
+    ret = '%02d:%02d:%02d' % (hour, minute, second)
+    return ret
