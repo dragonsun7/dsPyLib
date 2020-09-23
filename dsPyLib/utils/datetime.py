@@ -35,6 +35,8 @@ def to_datetime(d) -> datetime.datetime or None:
         return parse(d)
     elif isinstance(d, datetime.datetime):
         return d
+    elif isinstance(d, datetime.date):
+        return d
     else:
         raise ValueError()
 
