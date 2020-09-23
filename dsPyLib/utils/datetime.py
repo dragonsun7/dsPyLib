@@ -209,6 +209,9 @@ def datetime_compare(d1: datetime.datetime, d2: datetime.datetime) -> int:
 
 
 def time_delta_to_str(d: datetime.timedelta) -> str:
+    """
+    将时间差值转换为时分秒
+    """
     second = d.seconds
     hour = int(second / 3600)
     second = second - hour * 3600
@@ -216,3 +219,15 @@ def time_delta_to_str(d: datetime.timedelta) -> str:
     second = second - minute * 60
     ret = '%02d:%02d:%02d' % (hour, minute, second)
     return ret
+
+
+def is_valid_time(s: str, fmt: str = '%Y-%m-%d') -> bool:
+    """
+    判断是否是一个有效的日期字符串
+    """
+    # noinspection PyBroadException
+    try:
+        time.strptime(s, fmt)
+        return True
+    except:
+        return False
