@@ -233,3 +233,22 @@ def is_valid_time(s: str, fmt: str = '%Y-%m-%d') -> bool:
         return True
     except:
         return False
+
+
+def week_desc(d) -> str:
+    """
+    返回星期描述
+    """
+    week_day_dict = {
+        0: '星期一',
+        1: '星期二',
+        2: '星期三',
+        3: '星期四',
+        4: '星期五',
+        5: '星期六',
+        6: '星期天',
+    }
+    date = to_datetime(d)
+    week_day = date.weekday()
+    ret = week_day_dict[week_day]
+    return ret
