@@ -25,30 +25,17 @@ from playhouse.pool import PooledPostgresqlDatabase
 """
 
 
-def init_db(conf: dict):
-    """
-    使用DBMgr之前必须调用本函数，将数据库配置传递进来
-    必须在引入模型之前调用，例如：
-        from etc.db import db as db_conf
-        from db_mgr import init_db, DBMgr
+# 数据库配置信息
+class DBConfig(object):
 
-        if __name__ == '__main__':
-            init_db(db_conf)
-            from db_bar_daily import DBDailyBar
-
-    :param conf:
-        数据库的配置信息，例如：
-            {
-                'host': '47.75.175.228',
-                'port': 5432,
-                'username': 'postgres',
-                'password': '123456',
-                'database': 'vcoin',
-                'max_connections': 200,
-                'stale_timeout': 30
-            }
-    """
-    DBMgr.conf = conf
+    def __init__(self):
+        self.host = 'localhost'  # 主机
+        self.port = 5432  # 端口
+        self.username = ''  # 用户名
+        self.password = ''  # 密码
+        self.database = ''  # 数据库名
+        self.max_connections = 200  # 最大连接数
+        self.stale_timeout = 30  # 不活跃超时
 
 
 class DBMgr(object):
@@ -124,3 +111,42 @@ class DBMgr(object):
                     DBMgr.get_database().close()
 
         return wrapper
+
+
+def init_db(conf: dict):
+    """
+    使用DBMgr之前必须调用本函数，将数据库配置传递进来
+    必须在引入模型之前调用，例如：
+        from etc.db import db as db_conf
+        from db_mgr import init_db, DBMgr
+
+        if __name__ == '__main__':
+            init_db(db_conf)
+            from db_bar_daily import DBDailyBar
+
+    :param conf:
+        数据库的配置信息，例如：
+            {
+                'host': '47.75.175.228',
+                'port': 5432,
+                'username': 'postgres',
+                'password': '123456',
+                'database': 'vcoin',
+                'max_connections': 200,
+                'stale_timeout': 30
+            }
+    """
+    DBMgr.conf = conf
+
+
+def init_db2(conf: DBConfig):
+    conf_dict = {
+        'host': conf.host,
+        'port': conf.port,
+        'username': conf.username,
+        'password': conf.password,
+        'database': conf.database,
+        'max_connections': conf.max_connections,
+        'stale_timeout': conf.stale_timeout,
+    }
+    init_db(conf_dict)
