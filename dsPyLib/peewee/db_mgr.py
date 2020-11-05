@@ -2,8 +2,9 @@
 __author__ = 'Dragon Sun'
 __date__ = '2020-01-30 15:33:30'
 
-import threading
 import logging
+import threading
+
 from playhouse.pool import PooledPostgresqlDatabase
 
 """
@@ -36,6 +37,17 @@ class DBConfig(object):
         self.database = ''  # 数据库名
         self.max_connections = 200  # 最大连接数
         self.stale_timeout = 30  # 不活跃超时
+
+    def __str__(self):
+        s = str()
+        s += f'host = {self.host}'
+        s += f'\nport = {self.port}'
+        s += f'\nusername = {self.username}'
+        s += f'\npassword = {self.password}'
+        s += f'\ndatabase = {self.database}'
+        s += f'\nmax_connections = {self.max_connections}'
+        s += f'\nstale_timeout = {self.stale_timeout}'
+        return s
 
 
 class DBMgr(object):
@@ -85,7 +97,8 @@ class DBMgr(object):
 
     @classmethod
     def close_database(cls, func):
-        """关闭连接
+        """
+        关闭连接
         :param cls:
         :param func:
         :return:
