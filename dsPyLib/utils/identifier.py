@@ -9,6 +9,7 @@ import uuid
 def get_identifier() -> str:
     node = hex(uuid.getnode())
     node = node.lstrip('0x')
+    node = node.zfill(12)
     return node
 
 
