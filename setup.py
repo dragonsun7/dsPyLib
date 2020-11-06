@@ -34,5 +34,6 @@ setuptools.setup(
         "peewee",
         "configparser",
         "pika",
+        "progressbar2",
     ]
 )
