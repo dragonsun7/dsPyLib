@@ -33,5 +33,6 @@ setuptools.setup(
         "pyaudio",
         "peewee",
         "configparser",
+        "pika",
     ]
 )
