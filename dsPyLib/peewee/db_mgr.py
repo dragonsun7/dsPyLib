@@ -26,30 +26,6 @@ from playhouse.pool import PooledPostgresqlDatabase
 """
 
 
-# 数据库配置信息
-class DBConfig(object):
-
-    def __init__(self):
-        self.host = 'localhost'  # 主机
-        self.port = 5432  # 端口
-        self.username = ''  # 用户名
-        self.password = ''  # 密码
-        self.database = ''  # 数据库名
-        self.max_connections = 200  # 最大连接数
-        self.stale_timeout = 30  # 不活跃超时
-
-    def __str__(self):
-        s = str()
-        s += f'host = {self.host}'
-        s += f'\nport = {self.port}'
-        s += f'\nusername = {self.username}'
-        s += f'\npassword = {self.password}'
-        s += f'\ndatabase = {self.database}'
-        s += f'\nmax_connections = {self.max_connections}'
-        s += f'\nstale_timeout = {self.stale_timeout}'
-        return s
-
-
 class DBMgr(object):
     conf = {}
     __instance_lock = threading.Lock()
@@ -150,16 +126,3 @@ def init_db(conf: dict):
             }
     """
     DBMgr.conf = conf
-
-
-def init_db2(conf: DBConfig):
-    conf_dict = {
-        'host': conf.host,
-        'port': conf.port,
-        'username': conf.username,
-        'password': conf.password,
-        'database': conf.database,
-        'max_connections': conf.max_connections,
-        'stale_timeout': conf.stale_timeout,
-    }
-    init_db(conf_dict)
