@@ -41,6 +41,21 @@ def to_datetime(d) -> datetime.datetime or None:
         raise ValueError()
 
 
+def to_datetime_str(d, default=None, fmt='%Y-%m-%d') -> str or None:
+    """
+    将一个日期时间，转换成对应格式的字符串
+    :param d: (str or datetime)要转换的日期时间
+    :param default: (str or datetime)如果传入的d不能正确的转换，则使用这个默认值
+    :param fmt: 要转换成字符串的格式串
+    :return: 如果转换成功，返回对应的字符串，否则返回None
+    """
+    d = to_datetime(d)
+    if d is None:
+        d = to_datetime(default)
+    ret = d.strftime(fmt=fmt) if d else None
+    return ret
+
+
 def whole_point(dt, unit):
     """
     获取最靠近指定时间之前的整点时间
