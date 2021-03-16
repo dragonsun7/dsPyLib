@@ -52,7 +52,7 @@ def to_datetime_str(d, default=None, fmt='%Y-%m-%d') -> str or None:
     d = to_datetime(d)
     if d is None:
         d = to_datetime(default)
-    ret = d.strftime(fmt=fmt) if d else None
+    ret = d.strftime(fmt) if d else None
     return ret
 
 
@@ -267,3 +267,10 @@ def week_desc(d) -> str:
     week_day = date.weekday()
     ret = week_day_dict[week_day]
     return ret
+
+
+if __name__ == '__main__':
+    g_d = to_datetime_str(d='2021-03-15')
+    print(g_d)
+    g_d = to_datetime_str(d='2021', default='2021-03-16')
+    print(g_d)
