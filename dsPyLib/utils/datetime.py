@@ -7,7 +7,7 @@ import math
 import time
 from enum import Enum
 
-from dateutil.parser import parse
+from dateutil.parser import parse, ParserError
 
 """
 "%Y-%m-%d %H:%M:%S.%f"
@@ -28,17 +28,21 @@ class CycleUnit(Enum):
 def to_datetime(d) -> datetime.datetime or None:
     """
     接收一个日期时间参数，可以是字符串，可以是datetime，然后返回datetime
+    如果传入的d为None，或者转换错误，均返回None
     """
     if d is None:
         return None
     elif isinstance(d, str):
-        return parse(d)
+        try:
+            return parse(d)
+        except ParserError:
+            return None
     elif isinstance(d, datetime.datetime):
         return d
     elif isinstance(d, datetime.date):
         return d
     else:
-        raise ValueError()
+        return None
 
 
 def to_datetime_str(d, default=None, fmt='%Y-%m-%d') -> str or None:
@@ -270,6 +274,9 @@ def week_desc(d) -> str:
 
 
 if __name__ == '__main__':
+    to_datetime(d='')
+    exit()
+
     g_d = to_datetime_str(d='2021-03-15')
     print(g_d)
     g_d = to_datetime_str(d='2021', default='2021-03-16')
