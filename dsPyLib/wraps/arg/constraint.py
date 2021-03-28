@@ -31,12 +31,25 @@ class ACUnsignedInt(ArgumentConstraint):
         return True
 
 
+# 大于1的无符号整数
+class ACNotZeroUnsignedInt(ACUnsignedInt):
+
+    def check(self, value) -> bool:
+        ret = super(ACNotZeroUnsignedInt, self).check(value=value)
+        if ret:
+            if value < 1:
+                self.code = -102
+                self.message = '值必须大于等于0'
+                ret = False
+        return ret
+
+
 # 不能为None的Str
 class ACNotNoneStr(ArgumentConstraint):
 
     def check(self, value) -> bool:
         if not isinstance(value, str):
-            self.code = -111
+            self.code = -201
             self.message = '必须为str类型'
             return False
         return True
@@ -47,7 +60,7 @@ class ACNotNonePandasSeries(ArgumentConstraint):
 
     def check(self, value) -> bool:
         if not isinstance(value, Series):
-            self.code = -121
+            self.code = -301
             self.message = '必须为pandas.Series类型'
             return False
         return True
