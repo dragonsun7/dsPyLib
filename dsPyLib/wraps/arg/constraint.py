@@ -2,6 +2,8 @@
 __author__ = 'Dragon Sun'
 __date__ = '2021-03-28 21:34:13'
 
+from pandas import Series
+
 
 # 基类
 class ArgumentConstraint(object):
@@ -36,5 +38,16 @@ class ACNotNoneStr(ArgumentConstraint):
         if not isinstance(value, str):
             self.code = -111
             self.message = '必须为str类型'
+            return False
+        return True
+
+
+# 不能为None的Series
+class ACNotNonePandasSeries(ArgumentConstraint):
+
+    def check(self, value) -> bool:
+        if not isinstance(value, Series):
+            self.code = -121
+            self.message = '必须为pandas.Series类型'
             return False
         return True
