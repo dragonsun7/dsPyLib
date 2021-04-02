@@ -2,6 +2,7 @@
 __author__ = 'Dragon Sun'
 __date__ = '2021-03-28 21:34:13'
 
+from numpy import ndarray
 from pandas import Series
 
 
@@ -76,6 +77,21 @@ class ACNotNoneAndEmptyPandasSeries(ArgumentConstraint):
             return False
         if value.empty:
             self.code = -302
+            self.message = '不能为空数据'
+            return False
+        return True
+
+
+# 不能为None也不能为空的ndarray
+class ACNotNoneAndEmptyNumpyNdarray(ArgumentConstraint):
+
+    def check(self, value) -> bool:
+        if not isinstance(value, ndarray):
+            self.code = -401
+            self.message = '必须为numpy.ndarray类型'
+            return False
+        if value.size == 0:
+            self.code = -402
             self.message = '不能为空数据'
             return False
         return True
