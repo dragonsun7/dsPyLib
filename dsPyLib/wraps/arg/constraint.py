@@ -64,3 +64,18 @@ class ACNotNonePandasSeries(ArgumentConstraint):
             self.message = '必须为pandas.Series类型'
             return False
         return True
+
+
+# 不能为None也不能为空的Series
+class ACNotNoneAndEmptyPandasSeries(ArgumentConstraint):
+
+    def check(self, value) -> bool:
+        if not isinstance(value, Series):
+            self.code = -301
+            self.message = '必须为pandas.Series类型'
+            return False
+        if value.empty:
+            self.code = -302
+            self.message = '不能为空数据'
+            return False
+        return True
