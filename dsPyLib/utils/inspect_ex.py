@@ -18,7 +18,6 @@ def get_attr_names(o, ignores: list[str] = None) -> list[str]:
         2. 排除掉方法
         3. 排除掉自定义忽略列表中的属性
     :return:
-        # enum_attrs = [attr for attr in dir(enum_cls) if not attr.startswith("__") and not callable(attr)]  另一种写法
     """
     return [attr for attr in dir(o) if not (
             attr.startswith('_')
