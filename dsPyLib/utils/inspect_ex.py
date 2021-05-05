@@ -18,20 +18,14 @@ def get_attr_names(o, ignores: list[str] = None) -> list[str]:
         2. 排除掉方法
         3. 排除掉自定义忽略列表中的属性
     :return:
+        # enum_attrs = [attr for attr in dir(enum_cls) if not attr.startswith("__") and not callable(attr)]  另一种写法
     """
-
-    def is_keep(x: str) -> bool:
-        if x.startswith('_') or x.startswith('__'):
-            return False
-        if inspect.ismethod(getattr(o, x)):
-            return False
-        if ignores and (x in ignores):
-            return False
-        return True
-
-    attrs = o.__dir__()
-    ret = filter(is_keep, attrs)
-    return list(ret)
+    return [attr for attr in dir(o) if not (
+            attr.startswith('_')
+            or attr.startswith('__')
+            or callable(getattr(o, attr))
+            or (ignores and (attr in ignores)))
+            ]
 
 
 def main():
