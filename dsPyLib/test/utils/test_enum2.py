@@ -5,7 +5,7 @@ __date__ = '2021-05-05 18:35:57'
 import unittest
 from enum import unique, Enum
 
-from dsPyLib.utils.enum_ex import *
+from dsPyLib.utils.enum2 import *
 
 
 @unique
@@ -15,7 +15,7 @@ class SampleEnum(Enum):
     blue = '蓝色'
 
 
-class TestEnumEx(unittest.TestCase):
+class TestEnum2(unittest.TestCase):
 
     def test_get_enum_dict(self):
         org = {
