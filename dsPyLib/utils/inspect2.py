@@ -15,13 +15,15 @@ def get_attr_names(o, ignores: list[str] = None) -> list[str]:
     """
     获取对象自定义的属性列表
         1. 排除掉'_'和'__'打头的
-        2. 排除掉方法
-        3. 排除掉自定义忽略列表中的属性
+        2. 排除掉'Meta'
+        3. 排除掉方法
+        4. 排除掉自定义忽略列表中的属性
     :return:
     """
     return [attr for attr in dir(o) if not (
             attr.startswith('_')
             or attr.startswith('__')
+            or attr == 'Meta'
             or callable(getattr(o, attr))
             or (ignores and (attr in ignores)))
             ]
