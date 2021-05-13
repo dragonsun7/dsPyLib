@@ -116,7 +116,7 @@ def start_direct_reply_to_client(queue: str, params: dict) -> dict:
 
     channel.basic_consume(queue=RESERVED_REPLY_TO_QUEUE, on_message_callback=on_client_rx_reply_from_server,
                           auto_ack=True)
-    channel.basic_publish(exchange='', routing_key=queue, body=json.dumps(params),
+    channel.basic_publish(exchange='', routing_key=queue, body=str.encode(json.dumps(params), encoding='tuf8'),
                           properties=pika.BasicProperties(reply_to=RESERVED_REPLY_TO_QUEUE))
     channel.start_consuming()
     return ret
@@ -158,6 +158,7 @@ def publish(publish_exchange: str, data: dict):
     channel = connection.channel()  # 获取频道
     channel.exchange_declare(exchange=publish_exchange, exchange_type='fanout', durable=False)  # 声明发布交换机
     # delivery_mode = 2 声明消息在队列中持久化，delivery_mod = 1 消息非持久化
-    channel.basic_publish(exchange=publish_exchange, routing_key='', body=json.dumps(data),
+    body = str.encode(json.dumps(data), encoding='utf-8')
+    channel.basic_publish(exchange=publish_exchange, routing_key='', body=body,
                           properties=pika.BasicProperties(delivery_mode=1))
     connection.close()

@@ -8,6 +8,7 @@
       <w>celerybeat</w>
       <w>dateutil</w>
       <w>dtime</w>
+      <w>fanout</w>
       <w>fromtimestamp</w>
       <w>htmlcov</w>
       <w>infos</w>
