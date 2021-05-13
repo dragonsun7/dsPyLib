@@ -58,7 +58,7 @@ def start_direct_reply_to_server(queue: str, consume_proc):
 
     # 接收到消息后的处理
     def on_server_rx_rpc_request(ch, method_frame, properties, body):
-        s = str(body, encoding="utf8")
+        s = str(body, encoding="utf-8")
         params = json.loads(s)
         data = consume_proc(params)
         ch.basic_publish('', routing_key=properties.reply_to, body=json.dumps(data))
@@ -98,7 +98,7 @@ def start_direct_reply_to_client(queue: str, params: dict) -> dict:
     # noinspection PyUnusedLocal
     def on_client_rx_reply_from_server(ch, method_frame, properties, body):
         nonlocal ret
-        s = str(body, encoding="utf8")
+        s = str(body, encoding="utf-8")
         ret = json.loads(s)
         ch.close()
 
@@ -116,7 +116,7 @@ def start_direct_reply_to_client(queue: str, params: dict) -> dict:
 
     channel.basic_consume(queue=RESERVED_REPLY_TO_QUEUE, on_message_callback=on_client_rx_reply_from_server,
                           auto_ack=True)
-    channel.basic_publish(exchange='', routing_key=queue, body=str.encode(json.dumps(params), encoding='tuf8'),
+    channel.basic_publish(exchange='', routing_key=queue, body=str.encode(json.dumps(params), encoding='utf-8'),
                           properties=pika.BasicProperties(reply_to=RESERVED_REPLY_TO_QUEUE))
     channel.start_consuming()
     return ret
@@ -131,7 +131,7 @@ def start_subscribe(publish_exchange: str, consume_proc):
 
     # noinspection PyUnusedLocal
     def on_message_callback(ch, method, properties, body):
-        s = str(body, encoding="utf8")
+        s = str(body, encoding="utf-8")
         params = json.loads(s)
         consume_proc(params)
         ch.basic_ack(delivery_tag=method.delivery_tag)

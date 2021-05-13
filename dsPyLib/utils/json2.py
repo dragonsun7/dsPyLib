@@ -27,7 +27,7 @@ def load_json_from_file(file: str) -> dict or list:
     :param file:
     :return:
     """
-    with open(file, 'r', encoding='utf8') as fp:
+    with open(file, 'r', encoding='utf-8') as fp:
         return json.load(fp)
 
 
