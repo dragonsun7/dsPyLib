@@ -25,6 +25,15 @@ class CycleUnit(Enum):
     year = 8
 
 
+# 高精度的延迟，理论上能达到微秒精度 1s / 1000 / 1000
+def high_precision_delay(delay: float):
+    time.time()  # 连续取两次 time.time() 能更准确的取到时间
+    start = time.time()
+    end = time.time()
+    while end - start < delay:
+        end = time.time()
+
+
 def to_datetime(d) -> datetime.datetime or None:
     """
     接收一个日期时间参数，可以是字符串，可以是datetime，然后返回datetime
