@@ -14,3 +14,7 @@ pandas.set_option('display.max_rows', None)
 pandas.set_option('display.width', None)
 # 设置value的显示长度为200，默认为50
 pandas.set_option('max_colwidth', 200)
+
+
+def do_nothing():
+    pass

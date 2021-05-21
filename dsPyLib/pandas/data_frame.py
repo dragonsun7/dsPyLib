@@ -30,3 +30,36 @@ def is_col_exists(df: pandas.DataFrame, col_name: str) -> bool:
     index = get_col_index(df, col_name)
     ret = (index is not None)
     return ret
+
+
+def get_columns(df: pandas.DataFrame) -> list:
+    """
+    获取列名
+        有三种方法：
+            df.columns.values -> ndarray
+            list(df) -> list
+            df.columns.tolist() - list
+    :param df:
+    :return:
+    """
+    return df.columns.tolist()
+
+
+def get_column_len_max(df: pandas.DataFrame, col_name: str) -> int:
+    """
+    返回指定列中最大的字符长度
+    :param df:
+    :param col_name
+    :return:
+    """
+    return df[col_name].map(len).max()
+
+
+def get_column_len_min(df: pandas.DataFrame, col_name: str) -> int:
+    """
+    返回指定列中最小的字符长度
+    :param df:
+    :param col_name
+    :return:
+    """
+    return df[col_name].map(len).min()
