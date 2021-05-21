@@ -16,5 +16,5 @@ pandas.set_option('display.width', None)
 pandas.set_option('max_colwidth', 200)
 
 
-def do_nothing():
+def pandas_do_nothing():
     pass
