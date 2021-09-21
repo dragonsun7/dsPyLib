@@ -12,7 +12,7 @@ def run_all_tests(start_dir: str):
     :return:
     """
     runner = unittest.TextTestRunner(verbosity=2)
-    tests = unittest.defaultTestLoader.discover(start_dir=start_dir, pattern='test_*.py')
+    tests = unittest.defaultTestLoader.discover(start_dir=start_dir, pattern='test*.py', top_level_dir=start_dir)
     runner.run(test=tests)
 
 
