@@ -11,7 +11,7 @@ def get_current_function_name() -> str:
 
 
 # 获取当前对象属性列表
-def get_attr_names(o, ignores: list[str] = None) -> list[str]:
+def get_attr_names(o, ignores: list = None) -> list:
     """
     获取对象自定义的属性列表
         1. 排除掉'_'和'__'打头的
