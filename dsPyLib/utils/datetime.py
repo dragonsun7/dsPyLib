@@ -46,6 +46,22 @@ def to_date(d) -> datetime.date or None:
     return None
 
 
+def to_date_none_to_earliest(d) -> datetime.date:
+    d = to_date(d)
+    if d is None:
+        return datetime.date(1970, 1, 1)
+    else:
+        return d
+
+
+def to_date_none_to_latest(d) -> datetime.date:
+    d = to_date(d)
+    if d is None:
+        return datetime.date(2070, 1, 1)
+    else:
+        return d
+
+
 def to_datetime(d) -> datetime.datetime or None:
     """
     接收一个日期时间参数，可以是字符串，可以是datetime，然后返回datetime
