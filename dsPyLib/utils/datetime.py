@@ -41,7 +41,7 @@ def to_date(d) -> datetime.date or None:
     if date and isinstance(date, datetime.datetime):
         return date.date()
     else:
-        return False
+        return None
 
 
 def to_datetime(d) -> datetime.datetime or None:
