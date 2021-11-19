@@ -36,6 +36,14 @@ def high_precision_delay(delay: float):
         end = time.time()
 
 
+def to_date(d) -> datetime.date or None:
+    date = to_datetime(d)
+    if date and isinstance(date, datetime.datetime):
+        return date.date()
+    else:
+        return False
+
+
 def to_datetime(d) -> datetime.datetime or None:
     """
     接收一个日期时间参数，可以是字符串，可以是datetime，然后返回datetime
