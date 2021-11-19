@@ -38,10 +38,12 @@ def high_precision_delay(delay: float):
 
 def to_date(d) -> datetime.date or None:
     date = to_datetime(d)
-    if date and isinstance(date, datetime.datetime):
-        return date.date()
-    else:
-        return None
+    if date:
+        if type(date) is datetime.date:
+            return date
+        if type(date) is datetime.datetime:
+            return date.date()
+    return None
 
 
 def to_datetime(d) -> datetime.datetime or None:
