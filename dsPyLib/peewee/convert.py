@@ -3,6 +3,14 @@ __author__ = 'Dragon Sun'
 __date__ = '2020-06-08 09:56:26'
 
 import pandas
+import peewee
+
+
+# 从Peewee的Query中生成DataFrame
+def data_frame_from_peewee_query(query: peewee.Query) -> pandas.DataFrame:
+    connection = query._database.connection()  # noqa
+    sql, params = query.sql()
+    return pandas.read_sql_query(sql=sql, con=connection, params=params)
 
 
 def query_to_list(query) -> list:
