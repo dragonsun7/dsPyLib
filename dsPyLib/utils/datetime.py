@@ -46,6 +46,18 @@ def to_date(d) -> datetime.date or None:
     return None
 
 
+# 如果转换不成功，则返回当天
+def to_date_force(d) -> datetime.date:
+    date = to_datetime(d)
+    if date:
+        if type(date) is datetime.date:
+            return date
+        if type(date) is datetime.datetime:
+            return date.date()
+    else:
+        return datetime.date.today()
+
+
 def to_date_none_to_earliest(d) -> datetime.date:
     d = to_date(d)
     if d is None:
