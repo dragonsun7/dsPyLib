@@ -40,9 +40,24 @@ def float_to_str(f: float, digit: int = 2, is_ratio: bool = False) -> str:
     return s
 
 
+def int_to_str(n: int) -> str:
+    if n != 0:
+        return str(n)
+    else:
+        return ''
+
+
 def str_to_float(s: str) -> float:
     try:
         f = float(s)
     except ValueError:
         f = nan
     return f
+
+
+def str_to_int(s: str) -> int:
+    try:
+        n = int(s)
+    except ValueError:
+        n = 0
+    return n
