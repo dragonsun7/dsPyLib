@@ -17,12 +17,12 @@ class TestGetAttrNames(unittest.TestCase):
         self.assertEqual(set(names), set(attrs))
 
     def test_父类有属性(self):
-        names = ['prop_dict', 'prop_float', 'prop_int', 'prop_list', 'prop_str']
+        names = ['prop_dict', 'prop_float', 'prop_int', 'prop_list', 'prop_str', 'prop_enum']
         attrs = get_attr_names(o=TestObject2())
         self.assertEqual(set(names), set(attrs))
 
     def test_带忽略列表(self):
-        names = ['prop_dict', 'prop_list', 'prop_str']
+        names = ['prop_dict', 'prop_list', 'prop_str', 'prop_enum']
         ignores = ['prop_float', 'prop_int']
         attrs = get_attr_names(o=TestObject2(), ignores=ignores)
         self.assertEqual(set(names), set(attrs))
