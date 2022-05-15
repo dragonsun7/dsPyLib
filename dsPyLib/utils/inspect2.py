@@ -3,6 +3,9 @@ __author__ = 'Dragon Sun'
 __date__ = '2020-10-22 21:38:16'
 
 import inspect
+from decimal import Decimal
+
+from peewee import Model
 
 
 # 获取当前函数名称
@@ -73,7 +76,20 @@ def attr_from_list(o, attrs: list[str], values: list):
     @return: 对象
     """
     for i, attr in enumerate(attrs):
-        setattr(o, attr, values[i])
+        value = values[i]
+
+        if not isinstance(o, Model):  # peewee.Model比较特殊，新建的对象是None值，所以无法进行属性类型判断，故采用直接赋值的方式
+            attr_type = type(getattr(o, attr))
+            value_type = type(value)
+            if attr_type != value_type:
+                if attr_type == Decimal and value_type == float:
+                    value = Decimal(value)
+                elif attr_type == float and value_type == Decimal:
+                    value = float(value)
+                else:
+                    raise Exception('类型不一致')
+
+        setattr(o, attr, value)
     return o
 
 
