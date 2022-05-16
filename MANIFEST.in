@@ -1,1 +1,2 @@
 recursive-include dsPyLib/res notice.wav
+recursive-include dsPyLib/peewee/sql *.sql
