@@ -14,7 +14,7 @@ class ProgressInfoManager(object):
 
     def __init__(self, on_changed):
         """
-        :param on_changed: def (percent: float, whole: str, elapsed: str, remain: str)
+        @param on_changed: def (percent: float, whole: str, elapsed: str, remain: str)
         """
         self.on_changed = on_changed
         self.value = 0
