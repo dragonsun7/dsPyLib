@@ -61,3 +61,22 @@ def str_to_int(s: str) -> int:
     except ValueError:
         n = 0
     return n
+
+
+def to_percent(f: float, digit: int = 2) -> str:
+    """
+    将浮点数转化为百分比字符串
+        1. 乘以100
+        2. 按照参数保留小数位数
+        3. 尾部添加 '%'
+        例如：0.223314, 2 => 22.33%
+    @param f: 浮点数
+    @param digit: 保留的小数位数(转换为百分比后的小数位数)
+    @return: 百分比字符串
+    """
+    if isnan(f):
+        return ''
+
+    f *= 100
+    fmt = f'%.{digit}f'
+    return fmt % f + '%'
