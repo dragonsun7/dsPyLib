@@ -5,6 +5,20 @@ __date__ = '2020-05-20 14:35:38'
 from math import nan, isnan
 
 
+def is_odd(n: int) -> bool:
+    """
+    判断是否为奇数
+    """
+    return n % 2 == 0
+
+
+def is_even(n: int) -> bool:
+    """
+    判断是否为偶数
+    """
+    return not is_odd(n)
+
+
 def get_decimal_digit(f: float) -> int:
     """
     获取一个数的小数点后的位数
