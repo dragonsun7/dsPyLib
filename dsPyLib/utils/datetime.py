@@ -74,24 +74,25 @@ def to_date_none_to_latest(d) -> datetime.date:
         return d
 
 
-def to_datetime(d) -> datetime.datetime or None:
+def to_datetime(d, default=None) -> datetime.datetime or None:
     """
     接收一个日期时间参数，可以是字符串，可以是datetime，然后返回datetime
     如果传入的d为None，或者转换错误，均返回None
     """
-    if d is None:
-        return None
+    if isinstance(d, datetime.datetime) or isinstance(d, datetime.date):
+        pass
     elif isinstance(d, str):
         try:
-            return parse(d)
+            d = parse(d)
         except ParserError:
-            return None
-    elif isinstance(d, datetime.datetime):
-        return d
-    elif isinstance(d, datetime.date):
-        return d
+            d = None
     else:
-        return None
+        d = None
+
+    if d is None:
+        return to_datetime(d=default) if default else None
+    else:
+        return d
 
 
 def to_datetime_str(d, default=None, fmt='%Y-%m-%d') -> str or None:
