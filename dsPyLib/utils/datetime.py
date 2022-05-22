@@ -79,15 +79,17 @@ def to_datetime(d, default=None) -> datetime.datetime or None:
     接收一个日期时间参数，可以是字符串，可以是datetime，然后返回datetime
     如果传入的d为None，或者转换错误，均返回None
     """
-    if isinstance(d, datetime.datetime) or isinstance(d, datetime.date):
+    if d is None:
+        pass
+    elif isinstance(d, datetime.datetime) or isinstance(d, datetime.date):
         pass
     elif isinstance(d, str):
         try:
             d = parse(d)
         except ParserError:
-            d = None
+            return None
     else:
-        d = None
+        return None
 
     if d is None:
         return to_datetime(d=default) if default else None
@@ -321,6 +323,18 @@ def week_desc(d) -> str:
     week_day = date.weekday()
     ret = week_day_dict[week_day]
     return ret
+
+
+def last_month_day(d=None) -> int or None:
+    """
+    获取给定日期所在月的最后一天
+    @param d: 给定日期，如果为None则采用当前时间
+    @return: 如果d不能解析为日期，则返沪None，否则返回最后一天
+    """
+    import calendar
+
+    d = to_datetime(d=d, default=datetime.datetime.now())
+    return calendar.monthrange(year=d.year, month=d.month)[1] if d else None
 
 
 if __name__ == '__main__':
