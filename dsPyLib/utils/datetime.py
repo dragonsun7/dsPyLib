@@ -331,17 +331,16 @@ def last_month_day(d=None) -> int or None:
     @param d: 给定日期，如果为None则采用当前时间
     @return: 如果d不能解析为日期，则返沪None，否则返回最后一天
     """
-    import calendar
-
     d = to_datetime(d=d, default=datetime.datetime.now())
     return calendar.monthrange(year=d.year, month=d.month)[1] if d else None
 
 
-if __name__ == '__main__':
-    to_datetime(d='')
-    exit()
-
-    g_d = to_datetime_str(d='2021-03-15')
-    print(g_d)
-    g_d = to_datetime_str(d='2021', default='2021-03-16')
-    print(g_d)
+def week_name_cn(d=None) -> str:
+    """
+    获取指定日期星期的中文名
+    @param d:
+    @return:
+    """
+    d = to_datetime(d=d, default=datetime.datetime.now())
+    w = d.weekday()
+    return ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'][w]
