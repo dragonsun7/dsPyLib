@@ -87,8 +87,10 @@ def attr_from_list(o, attrs: list[str], values: list):
                 elif attr_type == float and value_type == Decimal:
                     value = float(value)
                 else:
-                    raise Exception('类型不一致')
-
+                    try:
+                        value = attr_type(value)
+                    except Exception:
+                        raise Exception('类型不一致')
         setattr(o, attr, value)
     return o
 
