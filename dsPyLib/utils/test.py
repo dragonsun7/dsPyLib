@@ -39,7 +39,7 @@ def run_all_test_class(start_dir: str):
         for file in files:
             if file.startswith('test_') and file.endswith('.py'):
                 filename = os.path.join(root, file)
-                with open(filename, 'r') as f:
+                with open(filename, 'r', encoding='utf-8') as f:
                     tree = ast.parse(f.read())
                     cls_names = [node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
                     for cls_name in cls_names:
