@@ -113,7 +113,7 @@ def init_db(conf: dict):
             init_db(db_conf)
             from db_bar_daily import DBDailyBar
 
-    :param conf:
+    @param conf:
         数据库的配置信息，例如：
             {
                 'host': '47.75.175.228',

@@ -5,6 +5,8 @@ __date__ = '2021-03-28 21:34:13'
 from numpy import ndarray
 from pandas import Series
 
+from dsPyLib.utils.datetime import to_datetime
+
 
 # 基类
 class ArgumentConstraint(object):
@@ -15,6 +17,13 @@ class ArgumentConstraint(object):
 
     def check(self, value) -> bool:
         raise NotImplementedError()
+
+
+# 占位类型(意味这这个位置不进行检查)
+class ACPlaceholder(ArgumentConstraint):
+
+    def check(self, value) -> bool:
+        return True
 
 
 # 无符号整型
@@ -93,5 +102,16 @@ class ACNotNoneAndEmptyNumpyNdarray(ArgumentConstraint):
         if value.size == 0:
             self.code = -402
             self.message = '不能为空数据'
+            return False
+        return True
+
+
+# 有效的日期
+class ACValidDate(ArgumentConstraint):
+
+    def check(self, value) -> bool:
+        if to_datetime(d=value) is None:
+            self.code = 501
+            self.message = '传入了不正确的日期参数'
             return False
         return True
