@@ -26,6 +26,17 @@ class ACPlaceholder(ArgumentConstraint):
         return True
 
 
+# 非None
+class ACIsNotNone(ArgumentConstraint):
+
+    def check(self, value) -> bool:
+        if value is None:
+            self.code = -100
+            self.message = '不能位None'
+            return False
+        return True
+
+
 # 无符号整型
 class ACUnsignedInt(ArgumentConstraint):
 
@@ -107,7 +118,7 @@ class ACNotNoneAndEmptyNumpyNdarray(ArgumentConstraint):
 
 
 # 有效的日期
-class ACValidDate(ArgumentConstraint):
+class ACIsValidDate(ArgumentConstraint):
 
     def check(self, value) -> bool:
         if to_datetime(d=value) is None:
