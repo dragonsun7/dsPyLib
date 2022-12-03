@@ -60,7 +60,7 @@ class ConstraintCheck(object):
             code = 0
             msg = ''
             for name, constraint_cls in bound_constraints_cls.items():
-                if not issubclass(constraint_cls, ArgumentConstraint):
+                if not issubclass(constraint_cls, ArgumentConstraintBase):
                     code = -51
                     msg = '约束类不正确'
                     success = False

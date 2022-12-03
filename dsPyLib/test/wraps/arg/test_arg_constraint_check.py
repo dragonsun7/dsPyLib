@@ -7,7 +7,7 @@ import unittest
 from dsPyLib.wraps import arg
 
 
-@arg.ConstraintCheck(arg.ACUnsignedInt, arg.ACUnsignedInt)
+@arg.ConstraintCheck(arg.ACIsUnsignedInt, arg.ACIsUnsignedInt)
 def foo(n1, n2):
     return n1, n2
 

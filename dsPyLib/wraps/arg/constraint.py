@@ -9,7 +9,7 @@ from dsPyLib.utils.datetime import to_datetime
 
 
 # 基类
-class ArgumentConstraint(object):
+class ArgumentConstraintBase(object):
 
     def __init__(self):
         self.code = 0
@@ -20,14 +20,14 @@ class ArgumentConstraint(object):
 
 
 # 占位类型(意味这这个位置不进行检查)
-class ACPlaceholder(ArgumentConstraint):
+class ACIsPlaceholder(ArgumentConstraintBase):
 
     def check(self, value) -> bool:
         return True
 
 
 # 非None
-class ACIsNotNone(ArgumentConstraint):
+class ACIsNotNone(ArgumentConstraintBase):
 
     def check(self, value) -> bool:
         if value is None:
@@ -38,7 +38,7 @@ class ACIsNotNone(ArgumentConstraint):
 
 
 # 无符号整型
-class ACUnsignedInt(ArgumentConstraint):
+class ACIsUnsignedInt(ArgumentConstraintBase):
 
     def check(self, value) -> bool:
         if not isinstance(value, int):
@@ -53,10 +53,10 @@ class ACUnsignedInt(ArgumentConstraint):
 
 
 # 大于1的无符号整数
-class ACNotZeroUnsignedInt(ACUnsignedInt):
+class ACIsNotZeroUnsignedInt(ACIsUnsignedInt):
 
     def check(self, value) -> bool:
-        ret = super(ACNotZeroUnsignedInt, self).check(value=value)
+        ret = super(ACIsNotZeroUnsignedInt, self).check(value=value)
         if ret:
             if value < 1:
                 self.code = -102
@@ -66,7 +66,7 @@ class ACNotZeroUnsignedInt(ACUnsignedInt):
 
 
 # 不能为None的Str
-class ACNotNoneStr(ArgumentConstraint):
+class ACIsNotNoneStr(ArgumentConstraintBase):
 
     def check(self, value) -> bool:
         if not isinstance(value, str):
@@ -77,7 +77,7 @@ class ACNotNoneStr(ArgumentConstraint):
 
 
 # 不能为None的Series
-class ACNotNonePandasSeries(ArgumentConstraint):
+class ACIsNotNonePandasSeries(ArgumentConstraintBase):
 
     def check(self, value) -> bool:
         if not isinstance(value, Series):
@@ -88,7 +88,7 @@ class ACNotNonePandasSeries(ArgumentConstraint):
 
 
 # 不能为None也不能为空的Series
-class ACNotNoneAndEmptyPandasSeries(ArgumentConstraint):
+class ACIsNotNoneAndNotEmptyPandasSeries(ArgumentConstraintBase):
 
     def check(self, value) -> bool:
         if not isinstance(value, Series):
@@ -103,7 +103,7 @@ class ACNotNoneAndEmptyPandasSeries(ArgumentConstraint):
 
 
 # 不能为None也不能为空的ndarray
-class ACNotNoneAndEmptyNumpyNdarray(ArgumentConstraint):
+class ACIsNotNoneAndNotEmptyNumpyNdarray(ArgumentConstraintBase):
 
     def check(self, value) -> bool:
         if not isinstance(value, ndarray):
@@ -118,7 +118,7 @@ class ACNotNoneAndEmptyNumpyNdarray(ArgumentConstraint):
 
 
 # 有效的日期
-class ACIsValidDate(ArgumentConstraint):
+class ACIsValidDate(ArgumentConstraintBase):
 
     def check(self, value) -> bool:
         if to_datetime(d=value) is None:
