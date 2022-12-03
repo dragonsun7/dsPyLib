@@ -53,10 +53,10 @@ class ACIsUnsignedInt(ArgumentConstraintBase):
 
 
 # 大于1的无符号整数
-class ACIsNotZeroUnsignedInt(ACIsUnsignedInt):
+class ACIsUnsignedAndNotZeroInt(ACIsUnsignedInt):
 
     def check(self, value) -> bool:
-        ret = super(ACIsNotZeroUnsignedInt, self).check(value=value)
+        ret = super(ACIsUnsignedAndNotZeroInt, self).check(value=value)
         if ret:
             if value < 1:
                 self.code = -102
