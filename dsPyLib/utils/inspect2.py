@@ -76,22 +76,22 @@ def attr_from_list(o, attrs: list[str], values: list):
     @return: 对象
     """
     for i, attr in enumerate(attrs):
-        value = values[i]
-
-        if not isinstance(o, Model):  # peewee.Model比较特殊，新建的对象是None值，所以无法进行属性类型判断，故采用直接赋值的方式
-            attr_type = type(getattr(o, attr))
-            value_type = type(value)
-            if attr_type != value_type:
-                if attr_type == Decimal and value_type == float:
-                    value = Decimal(value)
-                elif attr_type == float and value_type == Decimal:
-                    value = float(value)
-                else:
-                    try:
-                        value = attr_type(value)
-                    except Exception:
-                        raise Exception('类型不一致')
-        setattr(o, attr, value)
+        if hasattr(o, attr):
+            value = values[i]
+            if not isinstance(o, Model):  # peewee.Model比较特殊，新建的对象是None值，所以无法进行属性类型判断，故采用直接赋值的方式
+                attr_type = type(getattr(o, attr))
+                value_type = type(value)
+                if attr_type != value_type:
+                    if attr_type == Decimal and value_type == float:
+                        value = Decimal(value)
+                    elif attr_type == float and value_type == Decimal:
+                        value = float(value)
+                    else:
+                        try:
+                            value = attr_type(value)
+                        except Exception:
+                            raise Exception('类型不一致')
+            setattr(o, attr, value)
     return o
 
 
