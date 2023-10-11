@@ -1,9 +1,8 @@
 # -*-coding:utf-8-*-
 __author__ = 'Dragon Sun'
 
-
-import sys
 import os
+import sys
 
 
 def get_app_fullname():
@@ -32,3 +31,13 @@ def get_app_dir():
     :return: str
     """
     return os.path.dirname(get_app_fullname())
+
+
+def 获取当前进程内存占用() -> int:  # 字节
+    # 参考: https://saucer-man.com/operation_and_maintenance/298.html
+    import psutil  # 需要安装psutil包
+
+    pid = os.getpid()
+    p = psutil.Process(pid)
+    info = p.memory_full_info()
+    return info.uss

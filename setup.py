@@ -35,5 +35,6 @@ setuptools.setup(
         "configparser",
         "pika",
         "progressbar2",
+        'psutil',
     ]
 )
