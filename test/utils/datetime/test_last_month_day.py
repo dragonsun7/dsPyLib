@@ -5,7 +5,7 @@ __date__ = '2022-05-22 15:49:52'
 import datetime
 import unittest
 
-from dsPyLib.utils.datetime import last_month_day
+from dsPyLib.utils.datetimes import last_month_day
 
 
 class TestLastMonthDay(unittest.TestCase):

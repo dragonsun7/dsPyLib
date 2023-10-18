@@ -4,7 +4,7 @@ __author__ = 'Dragon Sun'
 # import time
 import threading
 from functools import wraps
-from dsPyLib.utils.datetime import *
+from dsPyLib.utils.datetimes import *
 from dsPyLib.utils.scheduler import Scheduler
 
 """

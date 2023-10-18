@@ -4,7 +4,7 @@ __date__ = '2022-05-24 20:16:25'
 
 import unittest
 
-from dsPyLib.utils.datetime import week_name_cn
+from dsPyLib.utils.datetimes import week_name_cn
 
 
 class TestWeekNameCN(unittest.TestCase):

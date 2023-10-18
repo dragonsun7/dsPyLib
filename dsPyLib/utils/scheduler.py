@@ -5,7 +5,7 @@ __author__ = 'Dragon Sun'
 import copy
 import time
 import threading
-from dsPyLib.utils.datetime import *
+from dsPyLib.utils.datetimes import *
 
 
 """

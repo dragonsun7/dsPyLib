@@ -2,12 +2,12 @@
 __author__ = 'Dragon Sun'
 
 import calendar
-import datetime
 import math
 import time
+from dateutil.parser import parse, ParserError
 from enum import Enum
 
-from dateutil.parser import parse, ParserError
+import datetime
 
 """
 "%Y-%m-%d %H:%M:%S.%f"
@@ -81,8 +81,10 @@ def to_datetime(d, default=None) -> datetime.datetime or None:
     """
     if d is None:
         pass
-    elif isinstance(d, datetime.datetime) or isinstance(d, datetime.date):
+    elif isinstance(d, datetime.datetime):
         pass
+    elif isinstance(d, datetime.date):
+        d = datetime.datetime(d.year, d.month, d.day)
     elif isinstance(d, str):
         try:
             d = parse(d)

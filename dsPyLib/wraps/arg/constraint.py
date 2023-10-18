@@ -5,7 +5,7 @@ __date__ = '2021-03-28 21:34:13'
 from numpy import ndarray
 from pandas import Series
 
-from dsPyLib.utils.datetime import to_datetime
+from dsPyLib.utils.datetimes import to_datetime
 
 
 # 基类

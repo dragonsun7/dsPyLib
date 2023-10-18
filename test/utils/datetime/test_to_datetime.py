@@ -5,7 +5,7 @@ __date__ = '2022-05-22 12:19:20'
 import datetime
 import unittest
 
-from dsPyLib.utils.datetime import to_datetime
+from dsPyLib.utils.datetimes import to_datetime
 
 
 class TestToDatetime(unittest.TestCase):
