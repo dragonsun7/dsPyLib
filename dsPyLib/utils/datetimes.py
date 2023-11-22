@@ -304,7 +304,7 @@ def is_valid_time(s: str, fmt: str = '%Y-%m-%d') -> bool:
     try:
         time.strptime(s, fmt)
         return True
-    except:
+    except Exception:
         return False
 
 

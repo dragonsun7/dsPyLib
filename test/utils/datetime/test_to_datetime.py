@@ -5,7 +5,7 @@ __date__ = '2022-05-22 12:19:20'
 import datetime
 import unittest
 
-from dsPyLib.utils.datetimes import to_datetime
+from dsPyLib.utils.datetimes import to_datetime, to_date
 
 
 class TestToDatetime(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestToDatetime(unittest.TestCase):
 
     def test_仅指定参数d_日期类型(self):
         d = datetime.date(year=2022, month=5, day=22)
-        ret = to_datetime(d)
+        ret = to_date(d)
         self.assertEqual(d, ret)
 
     def test_仅指定参数d_字符串_有效日期时间(self):

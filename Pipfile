@@ -8,6 +8,13 @@ name = "pypi"
 "python-dateutil" = "*"
 "pandas" = "*"
 "pyaudio" = "*"
+"requests" = "*"
+"progressbar2" = "*"
+"peewee" = "*"
+"pika" = "*"
+"psutil" = "*"
+"pysnowflake" = "*"
+
 
 [dev-packages]
 

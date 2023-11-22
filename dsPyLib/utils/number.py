@@ -26,7 +26,7 @@ def get_decimal_digit(f: float) -> int:
     :param f:
     :return:
     """
-    if type(f) == int:
+    if isinstance(f, int):
         return 0
     else:
         num = 1

@@ -53,7 +53,7 @@ class AliTTS(object):
     def _request(self, text_data: str, file_path: str, method: str = 'POST') -> (bool, str):
         """
         请求生成语音
-            单次调用传入文本不能超过300个字符，否则超过300字符的内容会被截断，只合成300字符以内的内容
+            单次调用传入文本不能超过300个字符，否则超过300个字符的内容会被截断，只合成300个字符以内的内容
         :param text_data: 要转换的文本
         :param file_path: 合成后语音文件路径
         :param method: 请求方法 'GET'、'POST'

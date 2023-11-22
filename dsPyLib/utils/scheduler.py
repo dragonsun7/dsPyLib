@@ -1,12 +1,10 @@
 # -*-coding:utf-8-*-
 __author__ = 'Dragon Sun'
 
-
 import copy
-import time
 import threading
-from dsPyLib.utils.datetimes import *
 
+from dsPyLib.utils.datetimes import *
 
 """
     从dt开始，每interval个unit执行一次，执行loop次后结束，如果loop为None，则无限次执行下去
