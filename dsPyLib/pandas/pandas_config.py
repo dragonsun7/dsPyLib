@@ -14,7 +14,11 @@ pandas.set_option('display.max_rows', None)
 pandas.set_option('display.width', None)
 # 设置value的显示长度为200，默认为50
 pandas.set_option('max_colwidth', 200)
+# 中文列头对齐
+pandas.set_option('display.unicode.ambiguous_as_wide', True)
+pandas.set_option('display.unicode.east_asian_width', True)
 
 
+# 为了防止IDE优化掉包引用
 def pandas_do_nothing():
     pass
