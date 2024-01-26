@@ -2,12 +2,13 @@
 __author__ = 'Dragon Sun'
 
 import calendar
+import datetime
 import math
 import time
-from dateutil.parser import parse, ParserError
 from enum import Enum
+from typing import Union
 
-import datetime
+from dateutil.parser import parse, ParserError
 
 """
 "%Y-%m-%d %H:%M:%S.%f"
@@ -36,14 +37,18 @@ def high_precision_delay(delay: float):
         end = time.time()
 
 
-def to_date(d) -> datetime.date or None:
-    date = to_datetime(d)
-    if date:
-        if type(date) is datetime.date:
-            return date
-        if type(date) is datetime.datetime:
-            return date.date()
-    return None
+def to_date(d: Union[datetime.datetime, datetime.date, str]) -> datetime.date:
+    if isinstance(d, datetime.datetime):
+        return d.date()
+    elif isinstance(d, datetime.date):
+        return d
+    elif isinstance(d, str):
+        try:
+            d = parse(d)
+            return d.date()
+        except ParserError:
+            raise ValueError()
+    raise ValueError()
 
 
 # 如果转换不成功，则返回当天
@@ -74,7 +79,20 @@ def to_date_none_to_latest(d) -> datetime.date:
         return d
 
 
-def to_datetime(d, default=None) -> datetime.datetime or None:
+def to_datetime(d: Union[datetime.datetime, datetime.date, str]) -> datetime.datetime:
+    if isinstance(d, datetime.datetime):
+        return d
+    elif isinstance(d, datetime.date):
+        return datetime.datetime.combine(d, datetime.time(0, 0, 0))
+    elif isinstance(d, str):
+        try:
+            return parse(d)
+        except ParserError:
+            raise ValueError()
+    raise ValueError()
+
+
+def to_datetime_废弃(d, default=None) -> datetime.datetime or None:
     """
     接收一个日期时间参数，可以是字符串，可以是datetime，然后返回datetime
     如果传入的d为None，或者转换错误，均返回None
@@ -333,7 +351,9 @@ def last_month_day(d=None) -> int or None:
     @param d: 给定日期，如果为None则采用当前时间
     @return: 如果d不能解析为日期，则返沪None，否则返回最后一天
     """
-    d = to_datetime(d=d, default=datetime.datetime.now())
+    if d is None:
+        d = datetime.datetime.now()
+    d = to_datetime(d=d)
     return calendar.monthrange(year=d.year, month=d.month)[1] if d else None
 
 
@@ -343,6 +363,8 @@ def week_name_cn(d=None) -> str:
     @param d:
     @return:
     """
-    d = to_datetime(d=d, default=datetime.datetime.now())
+    if d is None:
+        d = datetime.datetime.now()
+    d = to_datetime(d=d)
     w = d.weekday()
     return ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'][w]
