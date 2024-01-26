@@ -4,7 +4,9 @@ __date__ = '2019-06-28 21:47:04'
 
 import pandas
 
-# 设置中文列头对齐：https://zhuanlan.zhihu.com/p/497233470
+# 设置中文列头对齐：
+#   https://zhuanlan.zhihu.com/p/497233470
+#   https://bbs.quantclass.cn/thread/2269
 # https://blog.csdn.net/weekdawn/article/details/81389865
 
 # 显示所有列
