@@ -37,6 +37,26 @@ def high_precision_delay(delay: float):
         end = time.time()
 
 
+def to_time(t: Union[datetime.datetime, datetime.time, str]) -> datetime.time:
+    if isinstance(t, datetime.datetime):
+        return t.time()
+    elif isinstance(t, datetime.time):
+        return t
+    elif isinstance(t, str):
+        try:
+            d = parse(t)
+            return d.time()
+        except ParserError:
+            raise ValueError()
+    raise ValueError()
+
+
+def to_time_str(t: Union[datetime.datetime, datetime.time, str], fmt: str = '%H:%M:%S') -> str:
+    t = to_time(t)
+    ret = t.strftime(fmt)
+    return ret
+
+
 def to_date(d: Union[datetime.datetime, datetime.date, str]) -> datetime.date:
     if isinstance(d, datetime.datetime):
         return d.date()
