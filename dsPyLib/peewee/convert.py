@@ -2,8 +2,12 @@
 __author__ = 'Dragon Sun'
 __date__ = '2020-06-08 09:56:26'
 
+import warnings
+
 import pandas
 import peewee
+
+warnings.filterwarnings('ignore', category=UserWarning)
 
 
 # 从Peewee的Query中生成DataFrame
