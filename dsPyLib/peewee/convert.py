@@ -7,13 +7,12 @@ import warnings
 import pandas
 import peewee
 
-warnings.filterwarnings('ignore', category=UserWarning)
-
 
 # 从Peewee的Query中生成DataFrame
 def data_frame_from_peewee_query(query: peewee.Query) -> pandas.DataFrame:
     connection = query._database.connection()  # noqa
     sql, params = query.sql()
+    warnings.filterwarnings('ignore', category=UserWarning)
     return pandas.read_sql_query(sql=sql, con=connection, params=params)
 
 
