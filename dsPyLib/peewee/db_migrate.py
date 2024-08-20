@@ -58,7 +58,7 @@ class DBMigrate(object):
             self.db.drop_tables(models=models)
 
             # 4. 创建表
-            models = self.tables_for_drop()
+            models = self.tables_for_create()
             self.db.create_tables(models=models)
 
             # 5. 创建默认函数
