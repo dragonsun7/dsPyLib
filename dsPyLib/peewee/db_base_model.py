@@ -10,6 +10,10 @@ from dsPyLib.peewee.db_mgr import DBMgr
 class DBBaseModel(Model):
     """ 所有模型的基类 """
 
+    @classmethod
+    def 属性名转属性列表(cls, 属性名列表: list[str]) -> list:
+        return [getattr(cls, x) for x in 属性名列表]
+
     class Meta:
         # database = database_proxy
         database = DBMgr.get_database()
