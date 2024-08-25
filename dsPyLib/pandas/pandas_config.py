@@ -17,10 +17,10 @@ pandas.set_option('display.max_rows', None)
 pandas.set_option('display.width', None)
 # 列的最大宽度
 pandas.set_option('max_colwidth', 50)
-# 列头居左对齐
+# 列头居中对齐
 pandas.set_option('display.colheader_justify', 'center')
 # 如果 DataFrame 的列数超过屏幕宽度，输出将不会换行，而是压缩在一行中显示，可能会在末尾添加省略号（...）以表示内容被截断。
-pandas.set_option('expand_frame_repr', False)
+pandas.set_option('display.expand_frame_repr', False)
 
 # 中文列头对齐
 # （Pandas v0.23.4 官方中文文档）：https://www.bookstack.cn/read/pandas-0.23.4-zh/543fee809de88568.md
