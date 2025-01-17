@@ -5,10 +5,11 @@ __date__ = '2020-01-25 21:10:02'
 from dsPyLib.pandas.pandas_config import *
 
 
-def 断言列存在(df: pandas.DataFrame, 列名: list[str]):
+def 验证列存在(df: pandas.DataFrame, 列名: list[str]):
     传入的数据列 = df.columns.tolist()
     缺少的数据列 = list(set(列名) - set(传入的数据列))
-    assert len(缺少的数据列) == 0, f'数据列「{", ".join(缺少的数据列)}」不存在！'
+    if 缺少的数据列:
+        raise ValueError(f'数据列「{", ".join(缺少的数据列)}」不存在！')
 
 
 def get_col_index(df: pandas.DataFrame, col_name: str) -> int or None:
