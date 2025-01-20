@@ -153,6 +153,7 @@ def to_datetime_str(d, default=None, fmt='%Y-%m-%d') -> str or None:
 
 
 def whole_point(dt, unit):
+    # noinspection GrazieInspection
     """
     获取最靠近指定时间之前的整点时间
         '2016-01-02 12:34:56', second , '2016-01-02 12:34:56'
@@ -276,7 +277,8 @@ def timestamp_to_iso(ts):
     :param ts: timestamp
     :return: str
     """
-    date = datetime.datetime.utcfromtimestamp(ts)
+    # date = datetime.datetime.utcfromtimestamp(ts)
+    date = datetime.datetime.fromtimestamp(timestamp=ts, tz=datetime.timezone.utc)
     iso = date.isoformat('T', 'milliseconds') + 'Z'
     return iso
 
@@ -299,7 +301,8 @@ def datetime_to_iso(d: datetime.datetime) -> str:
     :return: str, ISO8601字符串，例如：'2019-04-13T12:50:00.000Z'
     """
     if d:
-        d1 = datetime.datetime.utcfromtimestamp(d.timestamp())
+        # d1 = datetime.datetime.utcfromtimestamp(d.timestamp())
+        d1 = datetime.datetime.fromtimestamp(timestamp=d.timestamp(), tz=datetime.timezone.utc)
         return d1.isoformat(timespec='milliseconds') + 'Z'
     else:
         return ''
