@@ -2,7 +2,21 @@
 __author__ = 'Dragon Sun'
 __date__ = '2020-01-25 21:10:02'
 
+from prettytable import PrettyTable
+
 from dsPyLib.pandas.pandas_config import *
+
+
+def 转成表格字符串(df: pandas.DataFrame) -> str:
+    """
+    将DataFrame转化为漂亮的对齐的表格字符串
+    @param df:
+    @return:
+    """
+    表格 = PrettyTable()
+    for 行 in df.values:
+        表格.add_row(行)
+    return 表格.get_string()
 
 
 def 验证列存在(df: pandas.DataFrame, 列名: list[str]):

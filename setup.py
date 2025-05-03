@@ -34,6 +34,7 @@ setuptools.setup(
         "peewee",
         "configparser",
         "pika",
+        'prettytable',
         "progressbar2",
         'psutil',
     ]
