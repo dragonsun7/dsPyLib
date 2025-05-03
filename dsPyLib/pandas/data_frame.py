@@ -13,11 +13,15 @@ def 转成表格字符串(df: pandas.DataFrame) -> str:
     @param df:
     @return:
     """
-    表格 = PrettyTable()
-    表格.field_names = df.columns.tolist()
-    for 行 in df.values:
-        表格.add_row(行)
-    return 表格.get_string()
+
+    if (df is None) or df.empty:
+        return ''
+    else:
+        表格 = PrettyTable()
+        表格.field_names = df.columns.tolist()
+        for 行 in df.values:
+            表格.add_row(行)
+        return 表格.get_string()
 
 
 def 验证列存在(df: pandas.DataFrame, 列名: list[str]):
