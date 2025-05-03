@@ -3,6 +3,7 @@ __author__ = 'Dragon Sun'
 __date__ = '2022-05-17 16:32:16'
 
 import math
+import textwrap
 from enum import IntEnum
 
 
@@ -75,3 +76,17 @@ def aligned(s: str, width: int = None, align: TextAlignEnum = TextAlignEnum.left
         l, r = half_split(space, left_first=False)
         back = l + s + r
         return middle(s=back, count=width, left_first=True)
+
+
+def 整体添加缩进(s: str, 制表符数: int) -> str:
+    """
+    针对多行的文本，前面整体添加缩进
+    @param s:
+    @param 制表符数: 每一行添加制表符的数量
+    @return:
+    """
+    prefix = ''
+    for i in range(制表符数):
+        prefix += '\t'
+
+    return textwrap.indent(text=s, prefix=prefix)
