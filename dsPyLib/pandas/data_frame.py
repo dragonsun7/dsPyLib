@@ -14,6 +14,7 @@ def 转成表格字符串(df: pandas.DataFrame) -> str:
     @return:
     """
     表格 = PrettyTable()
+    表格.field_names = df.columns.tolist()
     for 行 in df.values:
         表格.add_row(行)
     return 表格.get_string()
