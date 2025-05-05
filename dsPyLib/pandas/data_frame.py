@@ -31,6 +31,24 @@ def 验证列存在(df: pandas.DataFrame, 列名: list[str]):
         raise ValueError(f'数据列「{", ".join(缺少的数据列)}」不存在！')
 
 
+# 处理了异常
+def 数据帧行数(df: pandas.DataFrame) -> int:
+    # noinspection PyBroadException
+    try:
+        return len(df)
+    except Exception:
+        return 0
+
+
+# 处理了异常
+def 数据帧存在列(df: pandas.DataFrame, 列名: str) -> bool:
+    # noinspection PyBroadException
+    try:
+        return 列名 in df.columns.tolist()
+    except Exception:
+        return False
+
+
 def get_col_index(df: pandas.DataFrame, col_name: str) -> int or None:
     """
     获取指定的列名在DataFrame中的索引
