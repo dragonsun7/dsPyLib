@@ -19,6 +19,7 @@ def 转成表格字符串(df: pandas.DataFrame) -> str:
     else:
         表格 = PrettyTable()
         表格.field_names = df.columns.tolist()
+        表格.align = 'l'  # 'l' 表示左对齐，'c' 居中，'r' 右对齐
         for 行 in df.values:
             表格.add_row(行)
         return 表格.get_string()
