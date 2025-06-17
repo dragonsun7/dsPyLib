@@ -12,6 +12,7 @@ __author__ = 'Dragon Sun'
 """
 
 import logging.handlers
+
 from dsPyLib.utils.misc import *
 
 
@@ -62,3 +63,4 @@ def init_logger():
 
 
 logger = init_logger()
+file_logger = init_logger_with_level(logging.INFO, logging.INFO)
