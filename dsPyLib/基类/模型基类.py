@@ -93,7 +93,10 @@ class 模型基类(object):
             elif 属性类型 == Decimal:
                 属性值 = Decimal(属性值) if 属性值 else Decimal(-1)
             elif 属性类型 == float:
-                属性值 = float(属性值)
+                try:
+                    属性值 = float(属性值)
+                except ValueError:
+                    属性值 = -1
             elif 属性类型 == str:
                 属性值 = str(属性值)
             elif 属性类型 == int:
