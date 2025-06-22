@@ -91,12 +91,12 @@ class 模型基类(object):
                 if isinstance(属性值, str):
                     属性值 = 时间戳转北京时间(int(属性值))
             elif 属性类型 == Decimal:
-                属性值 = Decimal(属性值) if 属性值 else Decimal(-1)
+                属性值 = Decimal(属性值) if 属性值 else Decimal(-1.0)
             elif 属性类型 == float:
                 try:
                     属性值 = float(属性值)
                 except ValueError:
-                    属性值 = -1
+                    属性值 = -1.0
             elif 属性类型 == str:
                 属性值 = str(属性值)
             elif 属性类型 == int:
