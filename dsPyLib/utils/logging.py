@@ -63,4 +63,3 @@ def init_logger():
 
 
 logger = init_logger()
-file_logger = init_logger_with_level(logging.INFO, logging.INFO)
