@@ -63,3 +63,15 @@ def 时间戳转北京时间(毫秒时间戳: int) -> datetime:
 
 def 时间转毫秒时间戳(时间: datetime) -> int:
     return int(时间.timestamp() * 1000)
+
+
+def 获取时长字符串(开始时间: datetime) -> str:  # 小时:分钟:秒
+    开始 = 开始时间.replace(tzinfo=None)  # now()不带时区，不能和带时区的做运算
+    结束 = datetime.now()
+    时长: timedelta = 结束 - 开始
+    总秒数 = 时长.total_seconds()
+    小时数 = int(总秒数 // 3600)
+    分钟数 = int((总秒数 % 3600) // 60)
+    秒数 = int(总秒数 % 60)
+    时长字符串 = f'{小时数}:{分钟数:02}:{秒数:02}'
+    return 时长字符串
