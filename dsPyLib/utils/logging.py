@@ -41,15 +41,16 @@ def init_logger_with_level(stream_level=logging.DEBUG, file_level=logging.ERROR)
     return ret
 
 
-def init_console_logger_with_level(level=logging.DEBUG):
+def init_console_logger_with_level(level=logging.DEBUG, name: str = ''):
     formatter = logging.Formatter('%(asctime)s[%(levelname)s]: %(funcName)s(%(filename)s:%(lineno)d) %(message)s')
 
     handler = logging.StreamHandler()
     handler.setLevel(level)
     handler.setFormatter(formatter)
 
-    app_name = get_app_name()
-    ret = logging.getLogger(app_name)
+    if not name:
+        name = get_app_name()
+    ret = logging.getLogger(name)
     ret.setLevel(level)
     ret.addHandler(handler)
     return ret
