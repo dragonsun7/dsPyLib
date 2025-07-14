@@ -15,7 +15,7 @@ class DSRPCServer(object):
 
     def __init__(self, 端口: int, 服务: Union[Type[rpyc.Service], rpyc.Service], 服务器描述: str = '', 显示服务器日志: bool = False):
         self.端口: int = 端口
-        self.服务: Type[rpyc.Service] = 服务
+        self.服务: Union[Type[rpyc.Service], rpyc.Service] = 服务
         self.服务器描述: str = 服务器描述
         self.显示服务器日志: bool = 显示服务器日志
 
