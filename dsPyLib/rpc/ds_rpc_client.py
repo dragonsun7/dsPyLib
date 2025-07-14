@@ -135,7 +135,7 @@ class DSRPCClient:
 
 
 def demo():
-    客户端 = DSRPCClient(地址='localhost', 端口=18812)
+    客户端 = DSRPCClient(地址='localhost', 端口=18812, 显示日志=True)
     返回值 = 客户端.hello()
     print(返回值)
     客户端.关闭()
