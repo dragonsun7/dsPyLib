@@ -8,6 +8,7 @@ from typing import Optional
 
 import rpyc
 from rpyc.core.protocol import Connection
+from rpyc.core.protocol import PingError
 
 from dsPyLib.utils.logging import logger
 
@@ -105,11 +106,12 @@ class DSRPCClient:
 
             try:
                 # 快速检查连接是否存活
-                if self.连接.closed or (not self.连接.ping()):
+                if self.连接.closed:
                     logger.info("连接已断开，正在重新连接...")
                     return self._连接服务器()
+                self.连接.ping()  # 如果不通会触发异常
                 return True
-            except (EOFError, BrokenPipeError, AttributeError):
+            except (EOFError, BrokenPipeError, AttributeError, PingError):
                 logger.error("连接异常，正在重新连接...")
                 return self._连接服务器()
 
