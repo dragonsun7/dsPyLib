@@ -37,5 +37,6 @@ setuptools.setup(
         'prettytable',
         "progressbar2",
         'psutil',
+        'rpyc',
     ]
 )
