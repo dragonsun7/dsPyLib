@@ -83,7 +83,11 @@ class DSRPCClient:
         for 次数 in range(self._最大重试次数):
             try:
                 logger.info(f"尝试连接 {self.地址}:{self.端口} (尝试 {次数 + 1}/{self._最大重试次数})")
-                self.连接 = rpyc.connect(self.地址, self.端口)
+                配置 = {
+                    "allow_public_attrs": True,  # 允许公共属性访问(传递对象用)
+                    "sync_request_timeout": 60,  # 设置超时时间
+                }
+                self.连接 = rpyc.connect(self.地址, self.端口, config=配置)
                 logger.info("连接成功!")
                 return True
             except (ConnectionRefusedError, TimeoutError) as e:
