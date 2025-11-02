@@ -14,6 +14,9 @@ from dateutil.parser import parse, ParserError
 "%Y-%m-%d %H:%M:%S.%f"
 """
 
+时间类型 = Union[datetime.datetime, datetime.time, str]
+日期类型 = Union[datetime.datetime, datetime.date, str]
+
 
 class CycleUnit(Enum):
     second = 1
