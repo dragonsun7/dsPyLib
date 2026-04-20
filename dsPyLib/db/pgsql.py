@@ -25,6 +25,10 @@ PostgreSQL 中的占位符与参数
           'approval': 'Z20020171',
           'approval_number': '国药准字Z20020170'
       }
+      
+  用法示例：
+  with Postgres(host, port, user, pwd, db) as pg:
+      rows = pg.fetchall("SELECT * FROM table")      
 """
 
 
@@ -40,8 +44,16 @@ class Postgres(object):
             cursor_factory=cursor_factory
         )
 
-    def __del__(self):
-        self.conn.close()
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+
+    def close(self):
+        if self.conn and not self.conn.closed:
+            self.conn.close()
 
     def fetchone(self, sql, params=None):
         """
@@ -52,10 +64,11 @@ class Postgres(object):
         :return: 单条记录的list，
         """
         cursor = self.conn.cursor()
-        cursor.execute(sql, params)
-        ret = cursor.fetchone()
-        cursor.close()
-        return ret
+        try:
+            cursor.execute(sql, params)
+            return cursor.fetchone()
+        finally:
+            cursor.close()
 
     def fetchall(self, sql, params=None):
         """
@@ -65,10 +78,11 @@ class Postgres(object):
         :return: 数据集
         """
         cursor = self.conn.cursor()
-        cursor.execute(sql, params)
-        ret = cursor.fetchall()
-        cursor.close()
-        return ret
+        try:
+            cursor.execute(sql, params)
+            return cursor.fetchall()
+        finally:
+            cursor.close()
 
     def execute(self, sql, params=None):
         """
@@ -79,11 +93,15 @@ class Postgres(object):
         :return: 返回修改的行数，或者数据集的行数
         """
         cursor = self.conn.cursor()
-        cursor.execute(sql, params)
-        self.conn.commit()
-        ret = cursor.rowcount
-        cursor.close()
-        return ret
+        try:
+            cursor.execute(sql, params)
+            self.conn.commit()
+            return cursor.rowcount
+        except Exception:
+            self.conn.rollback()
+            raise
+        finally:
+            cursor.close()
 
     def executemany(self, sql, params_list):
         """
@@ -99,11 +117,15 @@ class Postgres(object):
         :return: 返回修改的行数，或者数据集的行数
         """
         cursor = self.conn.cursor()
-        cursor.executemany(sql, params_list)
-        self.conn.commit()
-        ret = cursor.rowcount
-        cursor.close()
-        return ret
+        try:
+            cursor.executemany(sql, params_list)
+            self.conn.commit()
+            return cursor.rowcount
+        except Exception:
+            self.conn.rollback()
+            raise
+        finally:
+            cursor.close()
 
     def batch_execute(self, commands):
         """
@@ -118,13 +140,18 @@ class Postgres(object):
         :return: 返回修改的行数，或者数据集的行数
         """
         cursor = self.conn.cursor()
-        ret = 0
-        for cmd in commands:
-            cursor.execute(cmd['sql'], cmd['params'])
-            ret += cursor.rowcount
-        self.conn.commit()
-        cursor.close()
-        return ret
+        try:
+            ret = 0
+            for cmd in commands:
+                cursor.execute(cmd['sql'], cmd.get('params'))
+                ret += cursor.rowcount
+            self.conn.commit()
+            return ret
+        except Exception:
+            self.conn.rollback()
+            raise
+        finally:
+            cursor.close()
 
 
 if __name__ == '__main__':
