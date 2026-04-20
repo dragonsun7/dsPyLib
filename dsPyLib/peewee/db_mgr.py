@@ -2,6 +2,7 @@
 __author__ = 'Dragon Sun'
 __date__ = '2020-01-30 15:33:30'
 
+import functools
 import logging
 import threading
 
@@ -35,19 +36,28 @@ class DBMgr(object):
     def get_database(cls, refresh=False):
         """
         单例多线程模式获取db对象
-        :param refresh:
+        :param refresh: 当为 True 时，强制重建数据库连接池（即使已存在），用于配置变更后刷新连接。
         :return:
         """
-        with DBMgr.__instance_lock:
-            if (DBMgr.__database is None) or refresh:
+        with cls.__instance_lock:
+            if (cls.__database is None) or refresh:  # 在无数据库连接池或者要求强制重建数据库连接池时，重建连接池
+
+                # 在有数据库连接池，且要求重建连接池的情况下，先关闭已有的数据库连接池
+                if refresh and cls.__database is not None:
+                    try:
+                        cls.__database.close_all()
+                    except Exception as e:
+                        logging.error(e)
+                    cls.__database = None
+
                 try:
-                    db_host = DBMgr.conf['host']
-                    db_port = DBMgr.conf['port']
-                    db_username = DBMgr.conf['username']
-                    db_password = DBMgr.conf['password']
-                    db_name = DBMgr.conf["database"]
-                    db_max_conn = DBMgr.conf['max_connections']
-                    db_stale_timeout = DBMgr.conf['stale_timeout']
+                    db_host = cls.conf['host']
+                    db_port = cls.conf['port']
+                    db_username = cls.conf['username']
+                    db_password = cls.conf['password']
+                    db_name = cls.conf["database"]
+                    db_max_conn = cls.conf['max_connections']
+                    db_stale_timeout = cls.conf['stale_timeout']
                 except KeyError:
                     raise Exception('使用前，需要调用init_db()传入数据库配置信息！')
 
@@ -61,21 +71,19 @@ class DBMgr(object):
                 #     }
                 # )
 
-                # 连接池
-                DBMgr.__database = PooledPostgresqlDatabase(
+                # 创建连接池
+                cls.__database = PooledPostgresqlDatabase(
                     database=db_name,
                     max_connections=db_max_conn,
                     stale_timeout=db_stale_timeout,
                     **{'host': db_host, 'port': db_port, 'user': db_username, 'password': db_password}
                 )
+        return cls.__database
 
-            return DBMgr.__database
-
-    @classmethod
-    def close_database(cls, func):
+    @staticmethod
+    def close_database(func):
         """
-        关闭连接
-        :param cls:
+        装饰器：自动连接数据库，并确保在函数执行完成后关闭数据库连接
         :param func:
         :return:
 
@@ -86,18 +94,17 @@ class DBMgr(object):
             def 使用了数据库的方法
         """
 
+        # 加 functools.wraps(func) 保留原函数元信息 (防止装饰后函数的 __name__/__doc__ 丢失)
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            db = DBMgr.get_database()
+            # # 从连接池取出一个连接，分配给当前线程
+            # peewee 的设计里，你不需要显式持有连接对象。连接池在 connect() 后会把连接绑定到当前线程，之后直接用 Model 操作即可
+            db.connect(reuse_if_open=True)
             try:
-                DBMgr.get_database().connect(reuse_if_open=True)
-            except Exception as e:
-                logging.error(e)
+                return func(*args, **kwargs)
             finally:
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    logging.error(e)
-                finally:
-                    DBMgr.get_database().close()
+                db.close()  # 将当前线程的连接归还给连接池（不是真正关闭）
 
         return wrapper
 
