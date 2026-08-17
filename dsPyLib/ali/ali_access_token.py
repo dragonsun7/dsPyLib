@@ -5,10 +5,12 @@ __date__ = '2019-12-30 15:31:07'
 import base64
 import hashlib
 import hmac
-import requests
 import time
 import uuid
+from typing import Tuple, Optional, OrderedDict
 from urllib import parse
+
+import requests
 
 """
     获取Ali服务需要的access_token
@@ -20,8 +22,9 @@ from urllib import parse
 
 
 class AccessToken:
+
     @staticmethod
-    def create_token(access_key_id, access_key_secret):
+    def create_token(access_key_id, access_key_secret) -> Tuple[Optional[str], Optional[int]]:
         parameters = {'AccessKeyId': access_key_id,
                       'Action': 'CreateToken',
                       'Format': 'JSON',
@@ -68,8 +71,7 @@ class AccessToken:
 
     @staticmethod
     def _encode_dict(dic):
-        keys = dic.keys()
-        dic_sorted = [(key, dic[key]) for key in sorted(keys)]
+        dic_sorted = OrderedDict(sorted(dic.items(), key=lambda x: x[0]))
         encoded_text = parse.urlencode(dic_sorted)
         return encoded_text.replace('+', '%20').replace('*', '%2A').replace('%7E', '~')
 
