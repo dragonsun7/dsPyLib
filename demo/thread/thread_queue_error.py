@@ -44,13 +44,23 @@ __date__ = '2022-05-17 11:06:18'
     
         try:
             n = self.q.get_nowait()  # 取出任务
-            self.q.task_done()
         except queue.Empty:
             break
+
+        try:
+            ...
+        finally:            
+            self.q.task_done()
+    
             
         get() 和 get_nowait() 的区别：
             get() 默认会阻塞等待
             get_nowait() 永远不等待，空队列时立即抛 queue.Empty 异常
+            
+    为了更直观的演示竞态，使用 threading.Barrier()
+    这样可以防止第6个线程还没启动，前面的就已经将任务抢光了，达不到争抢的目的
+        栅栏（Barrier）= 集合点：规定 N 个线程必须全部到达后，所有线程才同时放行
+        每调用一次 wait()，本轮到达计数就 +1；凑齐指定次数后全体同时放行，计数清零进入下一轮
 """
 
 import queue
@@ -61,12 +71,14 @@ import time
 
 class Worker(threading.Thread):
 
-    def __init__(self, name: str, q: queue.Queue):
+    def __init__(self, name: str, q: queue.Queue, barrier: threading.Barrier):
         super(Worker, self).__init__()
         self.name = name
         self.q = q
+        self.barrier = barrier
 
     def run(self) -> None:
+        self.barrier.wait()  # 所有线程就绪后同时起跑
         while True:
             if self.q.empty():
                 # 如果任务队列空了，表示完成
@@ -81,20 +93,27 @@ if __name__ == '__main__':
     sys.setswitchinterval(1e-6)
     print(sys.getswitchinterval())
 
-    incidents = 0
+    test_time = 100  # 测试100遍
+    worker_count = 150  # 150个线程
+    task_count = 5  # 5个任务
+    the_barrier = threading.Barrier(worker_count + 1)  # + 1是主线程
 
-    for i in range(100):  # 测试100遍
+    incidents = 0
+    for i in range(test_time):
         tasks = queue.Queue()
 
         # 将任务放入队列(创建5个任务)
-        for x in range(5):
+        for x in range(task_count):
             tasks.put(x)
 
         # 创建150个工作线程
-        workers = [Worker(name=str(x), q=tasks) for x in range(150)]
+        workers = [Worker(name=str(x), q=tasks, barrier=the_barrier) for x in range(worker_count)]
         for t in workers:
             t.daemon = True  # 为了即便线程锁死，程序也能正常退出
             t.start()
+
+        # 主线程也参与集合，凑齐 151 → 全体同时放行
+        the_barrier.wait()
 
         # 等待队列任务完成
         tasks.join()
@@ -106,4 +125,4 @@ if __name__ == '__main__':
         if alive:
             incidents += 1
 
-    print(f'结论: 150线程/5任务/100遍, 严格检测下 {incidents} 次真死锁')
+    print(f'结论: {worker_count}线程/{task_count}任务/{test_time}遍, 严格检测下 {incidents} 次真死锁')

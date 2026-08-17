@@ -2,6 +2,8 @@
 __author__ = 'Dragon Sun'
 __date__ = '2022-05-17 11:37:33'
 
+from concurrent import futures
+
 """
     线程：线程池
     
@@ -26,7 +28,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 def run(n: int):
-    print(f'线程{n}启动')
+    print(f'线程{n}启动', flush=True)
     time.sleep(1)
 
 

@@ -12,7 +12,7 @@ import time
 
 def thread_func(msg: str):
     for n in range(10):
-        print(f'{n}, {msg}, {threading.current_thread()}')
+        print(f'{n}, {msg}, {threading.current_thread()}', flush=True)
         time.sleep(1)
 
 
