@@ -17,8 +17,8 @@ __date__ = '2022-05-17 11:37:33'
         cancelled()返回线程是否被取消
         running()返回线程是否正在运行
         done()返回线程是否完成，包括取消和正常完成
-        result(timeout=None)获取该线程的返回结果，会阻塞线程
-        timeout是阻塞时间add_done_callback(fn)线程结束后执行fn函数
+        result(timeout=None)获取该线程的返回结果，会阻塞线程，timeout是阻塞时间
+        add_done_callback(fn)线程结束后执行fn函数
 """
 
 import time

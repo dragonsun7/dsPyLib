@@ -9,6 +9,7 @@ __date__ = '2022-05-17 11:06:18'
 
     这是教科书级的经典竞态：两个 Worker 同时通过 empty() 检查（都看到还剩 1 个任务），
     其中一个 get() 取走最后一项后，另一个 get() 永久阻塞。由于 Worker 是非守护线程，进程将永远挂死。
+    所以这里设置 daemon=True，是为了让死锁检测能跑完
 
     sys.setswitchinterval(interval) 用于设置 Python 解释器的线程切换间隔时间（单位为秒）。
     这个参数决定了 Python 的全局解释器锁（GIL）在多线程环境中多久释放一次，以便让其他线程有机会运行。
@@ -25,23 +26,23 @@ __date__ = '2022-05-17 11:06:18'
 
     在这里实测（放大竞态窗口：sys.setswitchinterval(1e-6) + 150 线程抢 5 个任务）
     将线程切换时间间隔设置为1微秒，这样就极大的提高了出现竞态的机会
-    
+
     Queue的join和线程的join不一样
         Queue.join() 的语义：阻塞直到队列中所有任务都被 task_done() 处理完
         （内部数一个 unfinished_tasks 计数器：每 put() 一次 +1，每 task_done() 一次 -1，归零即返回）。
-        
+
         关键：它完全不管线程死没死。 死锁的线程是阻塞在 get() 上的——它从没成功取到任务，也从没调用 task_done()，
         所以它压根不在计数器里，丝毫不影响 Queue.join() 返回。
-        
+
         所以，有线程锁死，Queue().join()也会退出
-        
+
         真正会等待线程退出的是threading.Thread.join()
-        
+
     解决办法：将 
         n = self.q.get() 
-        
+
         改成 
-    
+
         try:
             n = self.q.get_nowait()  # 取出任务
         except queue.Empty:
@@ -51,12 +52,12 @@ __date__ = '2022-05-17 11:06:18'
             ...
         finally:            
             self.q.task_done()
-    
-            
+
+
         get() 和 get_nowait() 的区别：
             get() 默认会阻塞等待
             get_nowait() 永远不等待，空队列时立即抛 queue.Empty 异常
-            
+
     为了更直观的演示竞态，使用 threading.Barrier()
     这样可以防止第6个线程还没启动，前面的就已经将任务抢光了，达不到争抢的目的
         栅栏（Barrier）= 集合点：规定 N 个线程必须全部到达后，所有线程才同时放行
