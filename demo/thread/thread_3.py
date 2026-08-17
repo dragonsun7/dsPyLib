@@ -2,8 +2,6 @@
 __author__ = 'Dragon Sun'
 __date__ = '2022-05-17 01:08:29'
 
-import time
-
 """
     线程取消
         设置标志，在线程循环中进行判断
@@ -11,6 +9,7 @@ import time
 """
 
 import threading
+import time
 
 
 class TaskThread(threading.Thread):

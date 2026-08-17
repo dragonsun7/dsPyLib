@@ -6,7 +6,6 @@ __date__ = '2022-05-17 11:06:18'
     线程，利用队列
 """
 
-
 import queue
 import threading
 import time
@@ -21,13 +20,15 @@ class Worker(threading.Thread):
 
     def run(self) -> None:
         while True:
-            # 如果任务队列空了，表示完成
-            if self.q.empty():
-                break
-            else:
-                n = self.q.get()  # 取出任务
-                print(f'线程{self.name}, {n}')
+            try:
+                n = self.q.get_nowait()  # 取出任务
+            except queue.Empty:
+                break  # 队列为空则结束任务
+
+            try:
+                print(f'线程{self.name}, {n}', flush=True)
                 time.sleep(0.2)
+            finally:
                 self.q.task_done()  # 通知队列已获取内容，用于队列的join()检查
 
 

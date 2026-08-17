@@ -60,7 +60,12 @@ if __name__ == '__main__':
     event = threading.Event()
 
     信号灯 = 信号灯线程(signal=event)
+    信号灯.daemon = True
     信号灯.start()
 
     车辆 = 车辆线程(signal=event)
+    车辆.daemon = True
     车辆.start()
+
+    # 总共跑30秒
+    time.sleep(30)

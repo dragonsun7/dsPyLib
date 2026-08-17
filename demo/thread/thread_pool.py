@@ -42,3 +42,5 @@ if __name__ == '__main__':
     print(t1.done())
     print(t2.done())
     print(t3.done())
+
+    pool.shutdown(wait=True)
