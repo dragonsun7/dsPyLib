@@ -38,5 +38,6 @@ setuptools.setup(
         "progressbar2",
         'psutil',
         'rpyc',
+        'pysnowflake',
     ]
 )

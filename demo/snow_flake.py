@@ -22,7 +22,7 @@ __date__ = '2021-04-30 20:32:34'
                 --port=8910 
                 --dc=1 
                 --worker=1 
-                --log_file_prefix=/tmp/pysnowflask.log
+                --log_file_prefix=/tmp/pysnowflake.log
                 >/dev/null &
         参数说明：                
             —address：本机的IP地址默认localhost
