@@ -2,8 +2,6 @@
 __author__ = 'Dragon Sun'
 __date__ = '2022-05-17 11:37:33'
 
-from concurrent import futures
-
 """
     线程：线程池
     
@@ -27,9 +25,11 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 
-def run(n: int):
+def run(n: int) -> int:
     print(f'线程{n}启动', flush=True)
     time.sleep(1)
+    print(f'线程{n}完成', flush=True)
+    return n
 
 
 if __name__ == '__main__':
@@ -40,9 +40,11 @@ if __name__ == '__main__':
     t2 = pool.submit(run, 2)
     t3 = pool.submit(run, 3)
 
-    # 查看
-    print(t1.done())
-    print(t2.done())
-    print(t3.done())
+    # 使用 result() 获取任务执行结果
+    # result() 会阻塞, 直到任务执行完成才返回
+    # 线程池容量为 2, 前两个任务结束后, 第三个任务才开始执行
+    print(t1.result())
+    print(t2.result())
+    print(t3.result())
 
     pool.shutdown(wait=True)
