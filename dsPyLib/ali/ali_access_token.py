@@ -2,26 +2,27 @@
 __author__ = 'Dragon Sun'
 __date__ = '2019-12-30 15:31:07'
 
+"""
+    获取Ali服务需要的access_token
+
+    文档：
+        https://help.aliyun.com/document_detail/72153.html?spm=a2c4g.11186623.2.32.5d375275hoibnU#h2-token-1
+        https://help.aliyun.com/document_detail/113251.html?spm=a2c4g.11186623.2.16.3f977229WWmhGp
+"""
+
 import base64
 import hashlib
 import hmac
 import time
 import uuid
-from typing import Tuple, OrderedDict
+from collections import OrderedDict
+from typing import Tuple
 from urllib import parse
 
 import requests
 from requests import Response
 
 from dsPyLib.类型.rust_style_result import Result, Ok, Err
-
-"""
-    获取Ali服务需要的access_token
-    
-    文档：
-        https://help.aliyun.com/document_detail/72153.html?spm=a2c4g.11186623.2.32.5d375275hoibnU#h2-token-1
-        https://help.aliyun.com/document_detail/113251.html?spm=a2c4g.11186623.2.16.3f977229WWmhGp
-"""
 
 
 class AccessToken:
@@ -78,7 +79,7 @@ class AccessToken:
         return encoded_text.replace('+', '%20').replace('*', '%2A').replace('%7E', '~')
 
     @staticmethod
-    def _encode_dict(dic) -> str:
+    def _encode_dict(dic: dict) -> str:
         dic_sorted = OrderedDict(sorted(dic.items(), key=lambda x: x[0]))
         encoded_text = parse.urlencode(dic_sorted)
         return encoded_text.replace('+', '%20').replace('*', '%2A').replace('%7E', '~')
