@@ -61,7 +61,9 @@ class AccessToken:
         if response.ok:
             try:
                 root_obj = response.json()  # 响应可能不是 JSON
-            except ValueError:
+            except (ValueError, requests.exceptions.RequestException):
+                # 覆盖: JSONDecodeError(ValueError子类) / UnicodeDecodeError(ValueError子类)
+                #       / ContentDecodingError(内容解码或解压损坏, 属 RequestException)
                 return Err(response)
             key = 'Token'
             if key in root_obj:
