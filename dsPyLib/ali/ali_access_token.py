@@ -13,10 +13,11 @@ __date__ = '2019-12-30 15:31:07'
 import base64
 import hashlib
 import hmac
+import threading
 import time
 import uuid
 from collections import OrderedDict
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 from urllib import parse
 
 import requests
@@ -25,6 +26,36 @@ from dsPyLib.类型.rust_style_result import Result, Ok, Err
 
 
 class AccessToken:
+
+    def __init__(self, access_key_id: str, access_key_secret: str):
+        self.access_key_id = access_key_id
+        self.access_key_secret = access_key_secret
+
+        self._token: Optional[str] = None
+        self._expire_time: Optional[int] = None
+        self._lock = threading.Lock()  # 线程安全: 同实例并发调用只发一次请求(单飞)
+
+    def token(self) -> Result[str, str]:
+        """
+        获取 access token(带实例级缓存, 未获取或已过期时自动重新请求)
+
+        功能: 首次调用请求阿里云并缓存; 有效期内直接返回缓存
+        用法:
+            client = AccessToken(access_key_id, access_key_secret)
+            result = client.token()
+            if result.is_ok():
+                token = result.ok_value()
+        """
+        with self._lock:
+            未获取 = not self._token
+            已过期 = self._expire_time is not None and (int(time.time()) >= self._expire_time)
+            if 未获取 or 已过期:
+                result = self.create_token(access_key_id=self.access_key_id, access_key_secret=self.access_key_secret)
+                if result.is_err():
+                    return Err(result.unwrap_err())
+                self._token, self._expire_time = result.unwrap()
+            assert self._token is not None  # 收窄: 缓存有效或刚获取, 必非空(给类型查看器看的)
+            return Ok(self._token)
 
     @staticmethod
     def create_token(access_key_id: str, access_key_secret: str) -> Result[Tuple[str, int], str]:
@@ -75,14 +106,17 @@ class AccessToken:
         # 提取数据
         if not isinstance(root_obj, dict):
             return Err(f'响应内容不正确：: {root_obj}')
-        token = root_obj.get('Token', {}).get('Id')
-        expire_time = root_obj.get('Token', {}).get('ExpireTime')
-        if not (token and isinstance(token, str)):
+        token_info = root_obj.get('Token')
+        if not isinstance(token_info, dict):  # Token 缺失或不是 dict(如字符串/列表), 避免 AttributeError 逃逸
+            return Err('未能正确获取 Token_Info！')
+        token = token_info.get('Id')
+        expire_time = token_info.get('ExpireTime')
+        if not isinstance(token, str):
             return Err('未能正确获取 Token！')
-        if not (expire_time and isinstance(expire_time, str)):
+        if expire_time is None:
             return Err('未能正确获取 ExpireTime！')
         try:
-            expire_timestamp = int(expire_time)
+            expire_timestamp = int(str(expire_time))
         except (ValueError, TypeError):
             return Err(f'未能正确转换ExpireTime:{expire_time}')
 

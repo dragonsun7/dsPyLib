@@ -7,14 +7,15 @@ __date__ = '2026-08-17 17:30:00'
     阿里云凭据从 dsConfigCenter 获取
 """
 
+import time
 import unittest
 from unittest import mock
 
 from dsConfigCenter import config_center
-from requests import Response
-from requests.exceptions import ContentDecodingError
+from requests.exceptions import ContentDecodingError, ConnectionError, Timeout
 
 from dsPyLib.ali.ali_access_token import AccessToken
+from dsPyLib.类型.rust_style_result import Ok, Err
 
 
 class TestCreateToken(unittest.TestCase):
@@ -30,7 +31,19 @@ class TestCreateToken(unittest.TestCase):
             self.assertIsInstance(expire_time, int)
         else:
             print(f'请求失败：{result.err_value()}')
-            self.assertIsInstance(result.err_value(), Response)
+            self.assertIsInstance(result.err_value(), str)
+
+    def test_获取Token(self):
+        ali = config_center.get_ali()
+        access_token_obj = AccessToken(access_key_id=ali.access_key_id, access_key_secret=ali.access_key_secret)
+        result = access_token_obj.token()
+        if result.is_ok():
+            token = result.unwrap()
+            print(token)
+            self.assertIsInstance(token, str)
+        else:
+            print(f'获取Token失败：{result.unwrap_err()}')
+            self.assertIsInstance(result.unwrap_err(), str)
 
 
 class 测试_encode_text(unittest.TestCase):
@@ -85,13 +98,21 @@ class 测试create_token分支(unittest.TestCase):
             响应.json.return_value = json_data
         return 响应
 
+    def _断言错误包含(self, result, 片段):
+        # 断言 Result 为 Err 且错误信息包含指定片段(收窄 Optional[str])
+        self.assertTrue(result.is_err())
+        错误 = result.err_value()
+        assert 错误 is not None  # 类型收窄: 失败时必有错误
+        self.assertIn(片段, 错误)
+
     @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
     def test_请求失败返回Err(self, mock_get):
         响应 = self._构造响应(ok=False)
         mock_get.return_value = 响应
         result = AccessToken.create_token('AK', 'SK')
         self.assertTrue(result.is_err())
-        self.assertIs(result.err_value(), 响应)  # 返回的就是同一个响应对象
+        self.assertIsInstance(result.err_value(), str)
+        self._断言错误包含(result, '响应失败')
 
     @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
     def test_响应非JSON返回Err(self, mock_get):
@@ -99,7 +120,8 @@ class 测试create_token分支(unittest.TestCase):
         mock_get.return_value = 响应
         result = AccessToken.create_token('AK', 'SK')
         self.assertTrue(result.is_err())
-        self.assertIs(result.err_value(), 响应)  # 返回的就是同一个响应对象
+        self.assertIsInstance(result.err_value(), str)
+        self._断言错误包含(result, '解析网络请求响应内容失败')
 
     @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
     def test_响应内容解码异常返回Err(self, mock_get):
@@ -108,7 +130,8 @@ class 测试create_token分支(unittest.TestCase):
         mock_get.return_value = 响应
         result = AccessToken.create_token('AK', 'SK')
         self.assertTrue(result.is_err())
-        self.assertIs(result.err_value(), 响应)  # 返回的就是同一个响应对象
+        self.assertIsInstance(result.err_value(), str)
+        self._断言错误包含(result, '解析网络请求响应内容失败')
 
     @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
     def test_JSON缺少Token键返回Err(self, mock_get):
@@ -116,7 +139,8 @@ class 测试create_token分支(unittest.TestCase):
         mock_get.return_value = 响应
         result = AccessToken.create_token('AK', 'SK')
         self.assertTrue(result.is_err())
-        self.assertIs(result.err_value(), 响应)  # 返回的就是同一个响应对象
+        self.assertIsInstance(result.err_value(), str)
+        self._断言错误包含(result, '未能正确获取 Token')
 
     @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
     def test_成功返回Ok(self, mock_get):
@@ -143,10 +167,123 @@ class 测试create_token分支(unittest.TestCase):
         self.assertIn('RegionId=cn-shanghai', url)
 
     @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
+    def test_连接异常返回Err(self, mock_get):
+        # 覆盖网络层异常(连接拒绝), 应归入 Err 而非逃逸
+        mock_get.side_effect = ConnectionError('连接被拒绝')
+        result = AccessToken.create_token('AK', 'SK')
+        self.assertTrue(result.is_err())
+        self.assertIsInstance(result.err_value(), str)
+        self._断言错误包含(result, '网络请求失败')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
+    def test_超时返回Err(self, mock_get):
+        # 覆盖超时异常
+        mock_get.side_effect = Timeout('请求超时')
+        result = AccessToken.create_token('AK', 'SK')
+        self.assertTrue(result.is_err())
+        self.assertIsInstance(result.err_value(), str)
+        self._断言错误包含(result, '网络请求失败')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
+    def test_Token缺少键返回Err(self, mock_get):
+        # Token 对象存在但缺少 ExpireTime 键, 不应抛 KeyError
+        响应 = self._构造响应(ok=True, json_data={'Token': {'Id': 'T'}})
+        mock_get.return_value = 响应
+        result = AccessToken.create_token('AK', 'SK')
+        self.assertTrue(result.is_err())
+        self.assertIsInstance(result.err_value(), str)
+        self._断言错误包含(result, '未能正确获取 ExpireTime')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
+    def test_响应内容非dict返回Err(self, mock_get):
+        # 根对象不是 dict(如字符串), 应返回 Err
+        响应 = self._构造响应(ok=True, json_data='不是dict')
+        mock_get.return_value = 响应
+        result = AccessToken.create_token('AK', 'SK')
+        self.assertTrue(result.is_err())
+        self._断言错误包含(result, '响应内容不正确')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
+    def test_Token非dict返回Err(self, mock_get):
+        # Token 字段存在但不是 dict(字符串/列表), 不应抛 AttributeError
+        响应 = self._构造响应(ok=True, json_data={'Token': 'not-a-dict'})
+        mock_get.return_value = 响应
+        result = AccessToken.create_token('AK', 'SK')
+        self.assertTrue(result.is_err())
+        self._断言错误包含(result, '未能正确获取 Token')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
+    def test_ExpireTime转换失败返回Err(self, mock_get):
+        # ExpireTime 无法转 int(如 'abc'), 应返回 Err 而非抛异常
+        响应 = self._构造响应(ok=True, json_data={'Token': {'Id': 'T', 'ExpireTime': 'abc'}})
+        mock_get.return_value = 响应
+        result = AccessToken.create_token('AK', 'SK')
+        self.assertTrue(result.is_err())
+        self._断言错误包含(result, '未能正确转换ExpireTime')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.requests.get')
     def test_请求带超时(self, mock_get):
         mock_get.return_value = self._构造响应(ok=True, json_data={'Token': {'Id': 'T', 'ExpireTime': 1}})
         AccessToken.create_token('AK', 'SK')
         self.assertEqual(mock_get.call_args[1]['timeout'], 10)
+
+
+class 测试令牌缓存(unittest.TestCase):
+    """实例级 token 缓存: 未获取/过期时请求, 有效期内命中缓存"""
+
+    @staticmethod
+    def _未来过期时间(秒=3600):
+        return int(time.time()) + 秒
+
+    @mock.patch('dsPyLib.ali.ali_access_token.AccessToken.create_token')
+    def test_首次请求后命中缓存(self, mock_create):
+        mock_create.return_value = Ok(('TOKEN', self._未来过期时间()))
+        实例 = AccessToken('AK', 'SK')
+        result1 = 实例.token()
+        result2 = 实例.token()
+        self.assertEqual(result1.ok_value(), 'TOKEN')
+        self.assertEqual(result2.ok_value(), 'TOKEN')
+        self.assertEqual(mock_create.call_count, 1, '第二次应命中缓存, 不重复请求')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.AccessToken.create_token')
+    def test_过期后重新请求(self, mock_create):
+        mock_create.return_value = Ok(('TOKEN', self._未来过期时间()))
+        实例 = AccessToken('AK', 'SK')
+        实例.token()
+        # 手动把缓存改为已过期
+        实例._expire_time = int(time.time()) - 100
+        mock_create.return_value = Ok(('TOKEN2', self._未来过期时间()))
+        结果 = 实例.token()
+        self.assertEqual(结果.ok_value(), 'TOKEN2')
+        self.assertEqual(mock_create.call_count, 2, '过期后应重新请求')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.AccessToken.create_token')
+    def test_缓存有效时请求失败不影响缓存(self, mock_create):
+        mock_create.return_value = Ok(('TOKEN', self._未来过期时间()))
+        实例 = AccessToken('AK', 'SK')
+        实例.token()
+        mock_create.return_value = Err('网络请求失败：连接被拒绝')
+        结果 = 实例.token()  # 缓存仍有效, 不应发起请求
+        self.assertEqual(结果.ok_value(), 'TOKEN')
+        self.assertEqual(mock_create.call_count, 1, '缓存有效时不应请求')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.AccessToken.create_token')
+    def test_首次请求失败返回Err(self, mock_create):
+        mock_create.return_value = Err('网络请求失败：连接被拒绝')
+        实例 = AccessToken('AK', 'SK')
+        结果 = 实例.token()
+        self.assertTrue(结果.is_err())
+        self.assertEqual(结果.err_value(), '网络请求失败：连接被拒绝')
+        self.assertEqual(实例._token, None, '失败不应写入缓存')
+
+    @mock.patch('dsPyLib.ali.ali_access_token.AccessToken.create_token')
+    def test_不同实例独立缓存(self, mock_create):
+        mock_create.return_value = Ok(('TOKEN', self._未来过期时间()))
+        实例1 = AccessToken('AK1', 'SK1')
+        实例2 = AccessToken('AK2', 'SK2')
+        实例1.token()
+        实例2.token()
+        self.assertEqual(mock_create.call_count, 2, '不同实例应各自请求')
 
 
 if __name__ == '__main__':
