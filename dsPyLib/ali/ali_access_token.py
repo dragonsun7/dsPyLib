@@ -27,7 +27,7 @@ from dsPyLib.类型.rust_style_result import Result, Ok, Err
 class AccessToken:
 
     @staticmethod
-    def create_token(access_key_id, access_key_secret) -> Result[Tuple[str, int], Response]:
+    def create_token(access_key_id: str, access_key_secret: str) -> Result[Tuple[str, int], Response]:
         parameters = {'AccessKeyId': access_key_id,
                       'Action': 'CreateToken',
                       'Format': 'JSON',
@@ -47,18 +47,21 @@ class AccessToken:
         secreted_string = hmac.new(bytes(access_key_secret + '&', encoding='utf-8'),
                                    bytes(string_to_sign, encoding='utf-8'),
                                    hashlib.sha1).digest()
-        signature = base64.b64encode(secreted_string)
+        signature = base64.b64encode(secreted_string)  # bytes
         # print('签名: %s' % signature)
-        # 进行URL编码
-        signature = AccessToken._encode_text(signature)
-        # print('URL编码后的签名: %s' % signature)
-        # 调用服务
-        full_url = 'http://nls-meta.cn-shanghai.aliyuncs.com/?Signature=%s&%s' % (signature, query_string)
+        # 进行URL编码(输出为 str)
+        signature_str = AccessToken._encode_text(signature)
+        # print('URL编码后的签名: %s' % signature_str)
+        # 调用服务(必须用 HTTPS, 请求中包含 AccessKeyId 与签名, 明文传输有泄露风险)
+        full_url = 'https://nls-meta.cn-shanghai.aliyuncs.com/?Signature=%s&%s' % (signature_str, query_string)
         # print('url: %s' % full_url)
-        # 提交HTTP GET请求
-        response = requests.get(full_url)
+        # 提交HTTP GET请求(带超时, 防止服务挂起时调用方无限等待)
+        response = requests.get(full_url, timeout=10)
         if response.ok:
-            root_obj = response.json()
+            try:
+                root_obj = response.json()  # 响应可能不是 JSON
+            except ValueError:
+                return Err(response)
             key = 'Token'
             if key in root_obj:
                 token = root_obj[key]['Id']
@@ -68,6 +71,9 @@ class AccessToken:
 
     @staticmethod
     def _encode_text(text) -> str:
+        # 兼容 bytes 输入(base64 签名等), 统一转 str 后再编码
+        if isinstance(text, bytes):
+            text = text.decode('utf-8')
         encoded_text = parse.quote_plus(text)
         return encoded_text.replace('+', '%20').replace('*', '%2A').replace('%7E', '~')
 

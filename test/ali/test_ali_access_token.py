@@ -21,6 +21,7 @@ class TestCreateToken(unittest.TestCase):
         ali = config_center.get_ali()
         result = AccessToken.create_token(access_key_id=ali.access_key_id, access_key_secret=ali.access_key_secret)
         if result.is_ok():
+            assert result.ok_value() is not None  # 类型收窄: 成功时必有值
             token, expire_time = result.ok_value()
             print(token, expire_time)
             self.assertIsInstance(token, str)
