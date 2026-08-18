@@ -7,10 +7,11 @@ import http.client
 import json
 import os
 import tempfile
-import urllib.parse
 import uuid
+from typing import TypeAlias, Tuple, Optional
+from urllib import parse
 
-from .ali_access_token import AccessToken
+from dsPyLib.ali.ali_access_token import AccessToken
 from ..sound.sound import play_wav, play_wav_async
 
 """
@@ -23,6 +24,8 @@ from ..sound.sound import play_wav, play_wav_async
     安装：
         pip install aliyun-python-sdk-core
 """
+
+Result: TypeAlias = Tuple[bool, Optional[str]]
 
 
 class AliTTS(object):
@@ -42,15 +45,15 @@ class AliTTS(object):
         self._host = 'nls-gateway.cn-shanghai.aliyuncs.com'
         self._url = f'https://{self._host}/stream/v1/tts'
 
-    def get(self, text_data: str, file_path: str) -> (bool, str):
+    def get(self, text_data: str, file_path: str) -> Result:
         return self._request(text_data, file_path, 'GET')
 
-    def post(self, text_data: str, file_path: str) -> (bool, str):
+    def post(self, text_data: str, file_path: str) -> Result:
         return self._request(text_data, file_path, 'POST')
 
     # ---------- 私有 ---------- #
 
-    def _request(self, text_data: str, file_path: str, method: str = 'POST') -> (bool, str):
+    def _request(self, text_data: str, file_path: str, method: str = 'POST') -> Result:
         """
         请求生成语音
             单次调用传入文本不能超过300个字符，否则超过300个字符的内容会被截断，只合成300个字符以内的内容
@@ -94,7 +97,7 @@ class AliTTS(object):
     def _get_params(self, text_data: str) -> str:
         # 采用RFC 3986规范进行url_encode编码
         text_url_encode = text_data
-        text_url_encode = urllib.parse.quote_plus(text_url_encode)
+        text_url_encode = parse.quote_plus(text_url_encode)
         text_url_encode = text_url_encode.replace("+", "%20")
         text_url_encode = text_url_encode.replace("*", "%2A")
         text_url_encode = text_url_encode.replace("%7E", "~")
@@ -128,7 +131,7 @@ class AliTTS(object):
         return body
 
 
-def tts_to_file(text_data: str, filename: str, access_key_id: str, access_key_secret: str, app_key: str) -> (bool, str):
+def tts_to_file(text_data: str, filename: str, access_key_id: str, access_key_secret: str, app_key: str) -> Result:
     # 获取access token
     access_token, expire_time = AccessToken.create_token(access_key_id, access_key_secret)
     if not (access_token and expire_time):
@@ -143,7 +146,7 @@ def tts_to_file(text_data: str, filename: str, access_key_id: str, access_key_se
     return True, None
 
 
-def tts_async(text_data: str, access_key_id: str, access_key_secret: str, app_key: str) -> (bool, str):
+def tts_async(text_data: str, access_key_id: str, access_key_secret: str, app_key: str) -> Result:
     # 获取access token
     access_token, expire_time = AccessToken.create_token(access_key_id, access_key_secret)
     if not (access_token and expire_time):
@@ -159,7 +162,7 @@ def tts_async(text_data: str, access_key_id: str, access_key_secret: str, app_ke
     return True, None
 
 
-def tts_sync(text_data: str, access_key_id: str, access_key_secret: str, app_key: str) -> (bool, str):
+def tts_sync(text_data: str, access_key_id: str, access_key_secret: str, app_key: str) -> Result:
     # 获取access token
     access_token, expire_time = AccessToken.create_token(access_key_id, access_key_secret)
     if not (access_token and expire_time):
@@ -214,11 +217,11 @@ def set_tts_conf(conf_file: str):
     set_tts_keys(ali_access_key_id, ali_access_key_secret, tts_app_key)
 
 
-def tts_sync2(s: str) -> (bool, str):
+def tts_sync2(s: str) -> Result:
     return tts_sync(s, g_access_key_id, g_access_key_secret, g_app_key)
 
 
-def tts_async2(s: str) -> (bool, str):
+def tts_async2(s: str) -> Result:
     return tts_async(s, g_access_key_id, g_access_key_secret, g_app_key)
 
 
