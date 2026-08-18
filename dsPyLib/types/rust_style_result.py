@@ -763,12 +763,12 @@ class Result(Generic[T, E]):
         values = []
         for result in results:
             if result.is_err():
-                错误 = result.err_value()
-                assert 错误 is not None  # 类型收窄: 失败时必有错误
-                return Result.err(错误)
-            值 = result.ok_value()
-            assert 值 is not None  # 类型收窄: 成功时必有值
-            values.append(值)
+                err_value = result.err_value()
+                assert err_value is not None  # 类型收窄: 失败时必有错误
+                return Result.err(err_value)
+            ok_value = result.ok_value()
+            assert ok_value is not None  # 类型收窄: 成功时必有值
+            values.append(ok_value)
         return Result.ok(values)
 
     @classmethod
