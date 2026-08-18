@@ -7,10 +7,13 @@ import hashlib
 import hmac
 import time
 import uuid
-from typing import Tuple, Optional, OrderedDict
+from typing import Tuple, OrderedDict
 from urllib import parse
 
 import requests
+from requests import Response
+
+from dsPyLib.类型.rust_style_result import Result, Ok, Err
 
 """
     获取Ali服务需要的access_token
@@ -24,7 +27,7 @@ import requests
 class AccessToken:
 
     @staticmethod
-    def create_token(access_key_id, access_key_secret) -> Tuple[Optional[str], Optional[int]]:
+    def create_token(access_key_id, access_key_secret) -> Result[Tuple[str, int], Response]:
         parameters = {'AccessKeyId': access_key_id,
                       'Action': 'CreateToken',
                       'Format': 'JSON',
@@ -60,27 +63,16 @@ class AccessToken:
             if key in root_obj:
                 token = root_obj[key]['Id']
                 expire_time = root_obj[key]['ExpireTime']
-                return token, expire_time
-        # print(response.text)
-        return None, None
+                return Ok((token, expire_time))
+        return Err(response)
 
     @staticmethod
-    def _encode_text(text):
+    def _encode_text(text) -> str:
         encoded_text = parse.quote_plus(text)
         return encoded_text.replace('+', '%20').replace('*', '%2A').replace('%7E', '~')
 
     @staticmethod
-    def _encode_dict(dic):
+    def _encode_dict(dic) -> str:
         dic_sorted = OrderedDict(sorted(dic.items(), key=lambda x: x[0]))
         encoded_text = parse.urlencode(dic_sorted)
         return encoded_text.replace('+', '%20').replace('*', '%2A').replace('%7E', '~')
-
-
-if __name__ == "__main__":
-    # 用户信息
-    g_access_key_id = '您的AccessKeyId'
-    g_access_key_secret = '您的AccessKeySecret'
-    g_token, g_expire_time = AccessToken.create_token(g_access_key_id, g_access_key_secret)
-    print('token: %s, expire time(s): %s' % (g_token, g_expire_time))
-    if g_expire_time:
-        print('token有效期的北京时间：%s' % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(g_expire_time))))
