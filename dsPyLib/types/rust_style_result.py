@@ -553,10 +553,10 @@ class Result(Generic[T, E]):
         参数: fn - 接收错误值返回新 Result 的函数
         返回: Result[T, U](错误类型变为 U)
         演示:
-            >>> Ok(42).or_else(lambda e: Result.ok('回退值'))
+            >>> Ok(42).or_else(lambda e: Result.ok(0))
             Ok(42)
-            >>> Err('e').or_else(lambda e: Result.ok('回退值'))
-            Ok(回退值)
+            >>> Err('e').or_else(lambda e: Result.ok(0))
+            Ok(0)
         """
         if self._is_ok:
             assert self._value is not None  # 类型收窄
