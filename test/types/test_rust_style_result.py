@@ -10,7 +10,7 @@ __date__ = '2026-08-18 18:00:00'
 import asyncio
 import unittest
 
-from dsPyLib.types.rust_style_result import Result, Ok, Err
+from dsPyLib.类型.rust_style_result import Result, Ok, Err
 
 
 class 测试构造(unittest.TestCase):
@@ -68,7 +68,10 @@ class 测试从其它类型转换(unittest.TestCase):
     def test_from_try抛异常(self):
         r = Result.from_try(lambda: int('abc'), lambda e: f'转换失败: {e}')
         self.assertTrue(r.is_err())
-        self.assertIn('转换失败', r.err_value())
+        错误 = r.err_value()
+        self.assertIsNotNone(错误)
+        assert 错误 is not None  # 类型收窄: 失败时必有错误
+        self.assertIn('转换失败', 错误)
 
 
 class 测试状态判断(unittest.TestCase):
@@ -348,13 +351,19 @@ class 测试配对(unittest.TestCase):
         self.assertEqual(Ok(1).zip_with(Err('e'), lambda a, b: a + b).err_value(), 'e')
 
     def test_transpose有值(self):
-        self.assertEqual(Ok(5).transpose().ok_value(), 5)
+        转置结果 = Ok(5).transpose()
+        self.assertIsNotNone(转置结果)
+        assert 转置结果 is not None  # 类型收窄
+        self.assertEqual(转置结果.ok_value(), 5)
 
     def test_transpose为None(self):
         self.assertIsNone(Ok(None).transpose())
 
     def test_transpose错误(self):
-        self.assertEqual(Err('e').transpose().err_value(), 'e')
+        转置结果 = Err('e').transpose()
+        self.assertIsNotNone(转置结果)
+        assert 转置结果 is not None  # 类型收窄
+        self.assertEqual(转置结果.err_value(), 'e')
 
 
 class 测试收集(unittest.TestCase):

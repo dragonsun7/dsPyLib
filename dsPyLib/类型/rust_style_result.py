@@ -928,27 +928,28 @@ if __name__ == '__main__':
             return Err('除数不能为零')
         return Ok(a / b)
 
+
     # 构造与判断
-    print(除法(10, 2))             # Ok(5.0)
-    print(除法(10, 0))             # Err(除数不能为零)
+    print(除法(10, 2))  # Ok(5.0)
+    print(除法(10, 0))  # Err(除数不能为零)
 
     # 取值
-    print(除法(10, 2).unwrap())    # 5.0
+    print(除法(10, 2).unwrap())  # 5.0
     print(除法(10, 0).unwrap_or(-1))  # -1
 
     # 转换与链式
-    print(除法(10, 2).map(lambda x: x * 100))              # Ok(500.0)
-    print(除法(10, 0).or_else(lambda e: Ok(0.0)))           # Ok(0.0)
-    print(除法(10, 2).and_then(lambda x: 除法(x, 0)))       # Err(除数不能为零)
+    print(除法(10, 2).map(lambda x: x * 100))  # Ok(500.0)
+    print(除法(10, 0).or_else(lambda e: Ok(0.0)))  # Ok(0.0)
+    print(除法(10, 2).and_then(lambda x: 除法(x, 0)))  # Err(除数不能为零)
 
     # 收集
-    print(Result.all([除法(10, 2), 除法(20, 4)]))           # Ok([5.0, 5.0])
-    print(Result.all([除法(10, 2), 除法(20, 0)]))           # Err(除数不能为零)
-    print(Result.any([除法(10, 0), 除法(30, 3)]))           # Ok(10.0)
+    print(Result.all([除法(10, 2), 除法(20, 4)]))  # Ok([5.0, 5.0])
+    print(Result.all([除法(10, 2), 除法(20, 0)]))  # Err(除数不能为零)
+    print(Result.any([除法(10, 0), 除法(30, 3)]))  # Ok(10.0)
 
     # 迭代(IntoIterator)
-    print(list(除法(10, 2)))       # [5.0]
-    print(list(除法(10, 0)))       # []
+    print(list(除法(10, 2)))  # [5.0]
+    print(list(除法(10, 0)))  # []
 
     # 模式匹配(Python 3.10+)
     结果 = 除法(1, 0)
