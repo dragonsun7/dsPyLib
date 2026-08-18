@@ -184,8 +184,8 @@ class Result(Generic[T, E]):
         """
         try:
             return cls.ok(fn())
-        except Exception as e:
-            return cls.err(err_fn(e))
+        except Exception as e1:
+            return cls.err(err_fn(e1))
 
     # ---------- 状态判断(Rust 对应) ---------- #
 
@@ -951,8 +951,8 @@ if __name__ == '__main__':
     print(list(除法(10, 0)))       # []
 
     # 模式匹配(Python 3.10+)
-    r = 除法(1, 0)
-    match r:
+    结果 = 除法(1, 0)
+    match 结果:
         case Result(True, 值, _):
             print(f'成功: {值}')
         case Result(False, _, 错误):
