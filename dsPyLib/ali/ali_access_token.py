@@ -17,12 +17,23 @@ import threading
 import time
 import uuid
 from collections import OrderedDict
-from typing import Tuple, Union, Optional
+from typing import Union, Optional
 from urllib import parse
 
-import requests
+from pydantic import BaseModel, Field
 
-from dsPyLib.类型.rust_style_result import Result, Ok, Err
+from dsPyLib.utils.ds_request import ds_get, response_data_to_dict
+from dsPyLib.类型.ds_dict import get_dict_value, dict_to_model
+from dsPyLib.类型.ds_rust_style_result import Result, Ok, Err
+
+
+class TokenModel(BaseModel):
+    user_id: str = Field(alias='UserId', default='')
+    token: str = Field(alias='Id', default='')
+    expire_time: int = Field(alias='ExpireTime', default=0)
+
+    def 已过期(self) -> bool:
+        return (self.expire_time > 0) and (int(time.time()) >= self.expire_time)
 
 
 class AccessToken:
@@ -31,11 +42,10 @@ class AccessToken:
         self.access_key_id = access_key_id
         self.access_key_secret = access_key_secret
 
-        self._token: Optional[str] = None
-        self._expire_time: Optional[int] = None
+        self._token_model: Optional[TokenModel] = None
         self._lock = threading.Lock()  # 线程安全: 同实例并发调用只发一次请求(单飞)
 
-    def token(self) -> Result[str, str]:
+    def token(self) -> Result[str, Exception]:
         """
         获取 access token(带实例级缓存, 未获取或已过期时自动重新请求)
 
@@ -47,18 +57,18 @@ class AccessToken:
                 token = result.ok_value()
         """
         with self._lock:
-            未获取 = not self._token
-            已过期 = self._expire_time is not None and (int(time.time()) >= self._expire_time)
+            未获取 = self._token_model is None
+            已过期 = self._token_model and self._token_model.已过期()
             if 未获取 or 已过期:
                 result = self.create_token(access_key_id=self.access_key_id, access_key_secret=self.access_key_secret)
                 if result.is_err():
                     return Err(result.unwrap_err())
-                self._token, self._expire_time = result.unwrap()
-            assert self._token is not None  # 收窄: 缓存有效或刚获取, 必非空(给类型查看器看的)
-            return Ok(self._token)
+                self._token_model = result.unwrap()
+            assert self._token_model is not None  # 收窄: 缓存有效或刚获取, 必非空(给类型查看器看的)
+            return Ok(self._token_model.token)
 
     @staticmethod
-    def create_token(access_key_id: str, access_key_secret: str) -> Result[Tuple[str, int], str]:
+    def create_token(access_key_id: str, access_key_secret: str) -> Result[TokenModel, Exception]:
         # 生成请求参数列表
         parameters = {'AccessKeyId': access_key_id,
                       'Action': 'CreateToken',
@@ -80,47 +90,34 @@ class AccessToken:
         # 进行URL编码(输出为 str)
         signature = base64.b64encode(secreted_string)  # bytes
         signature_str = AccessToken._encode_text(signature)
-        # 调用服务(必须用 HTTPS, 请求中包含 AccessKeyId 与签名, 明文传输有泄露风险)
+        # 生成URL(必须用 HTTPS, 请求中包含 AccessKeyId 与签名, 明文传输有泄露风险)
         full_url = 'https://nls-meta.cn-shanghai.aliyuncs.com/?Signature=%s&%s' % (signature_str, query_string)
 
         # 发起网络请求
-        try:
-            response = requests.get(full_url, timeout=10)  # 提交HTTP GET请求(带超时, 防止服务挂起时调用方无限等待)
-        except requests.exceptions.RequestException as e:  # 网络层异常(连接失败/超时/DNS等)
-            return Err(f'网络请求失败：{str(e)}')
+        result1 = ds_get(full_url)
+        if result1.is_err():
+            return Err(result1.unwrap_err())
+        response = result1.unwrap()
 
-        # 验证响应成功状态
-        if not response.ok:
-            return Err(f'网络请求响应失败: {response.status_code}, {response.reason}, {response.text}')
+        # 拆解出响应字典
+        result2 = response_data_to_dict(response)
+        if result2.is_err():
+            return Err(result2.unwrap_err())
+        root_dict = result2.unwrap()
 
-        # 拆解响应内容
-        try:
-            root_obj = response.json()
-        except (ValueError, requests.exceptions.RequestException) as e:
-            # 覆盖:
-            #   JSONDecodeError(ValueError子类)
-            #   UnicodeDecodeError(ValueError子类)
-            #   ContentDecodingError(内容解码或解压损坏, 属 RequestException)
-            return Err(f'解析网络请求响应内容失败：{str(e)}')
+        # 拆解出Token字典
+        result3 = get_dict_value(data=root_dict, keypath='Token', expected_type=dict)
+        if result3.is_err():
+            return Err(result3.unwrap_err())
+        token_dict = result3.unwrap()
 
-        # 提取数据
-        if not isinstance(root_obj, dict):
-            return Err(f'响应内容不正确：: {root_obj}')
-        token_info = root_obj.get('Token')
-        if not isinstance(token_info, dict):  # Token 缺失或不是 dict(如字符串/列表), 避免 AttributeError 逃逸
-            return Err('未能正确获取 Token_Info！')
-        token = token_info.get('Id')
-        expire_time = token_info.get('ExpireTime')
-        if not isinstance(token, str):
-            return Err('未能正确获取 Token！')
-        if expire_time is None:
-            return Err('未能正确获取 ExpireTime！')
-        try:
-            expire_timestamp = int(str(expire_time))
-        except (ValueError, TypeError):
-            return Err(f'未能正确转换ExpireTime:{expire_time}')
+        # 生成模型
+        result4 = dict_to_model(data=token_dict, model_class=TokenModel)
+        if result4.is_err():
+            return Err(result4.unwrap_err())
+        model = result4.unwrap()
 
-        return Ok((token, expire_timestamp))
+        return Ok(model)
 
     @staticmethod
     def _encode_text(text: Union[str, bytes]) -> str:
