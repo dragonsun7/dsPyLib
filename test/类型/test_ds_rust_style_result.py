@@ -3,14 +3,14 @@ __author__ = 'Dragon Sun'
 __date__ = '2026-08-18 18:00:00'
 
 """
-    dsPyLib/types/rust_style_result.py 的单元测试
+    dsPyLib/类型/ds_rust_style_result.py 的单元测试
     覆盖全部构造/判断/取值/转换/组合/收集/迭代/异步/魔法方法
 """
 
 import asyncio
 import unittest
 
-from dsPyLib.类型.rust_style_result import Result, Ok, Err
+from dsPyLib.类型.ds_rust_style_result import Result, Ok, Err
 
 
 class 测试构造(unittest.TestCase):
@@ -448,7 +448,7 @@ class 测试魔法方法(unittest.TestCase):
         self.assertEqual(repr(Ok(42)), 'Ok(42)')
 
     def test_repr失败(self):
-        self.assertEqual(repr(Err('出错了')), 'Err(出错了)')
+        self.assertEqual(repr(Err('出错了')), "Err('出错了')")
 
     def test_bool成功为真(self):
         self.assertTrue(bool(Ok(42)))

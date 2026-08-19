@@ -6,7 +6,7 @@ __date__ = '2026-08-18 14:57:22'
     实现 Rust 风格的 Result(成功/失败二选一的结果类型)
 
     ── 快速开始 ───────────────────────────────────────────────
-        from dsPyLib.types.rust_style_result import Result, Ok, Err
+        from dsPyLib.类型.ds_rust_style_result import Result, Ok, Err
 
         r = Ok(42)            # 成功结果(贴近 Rust 的 Ok(42) 语法)
         r = Err('出错了')     # 失败结果(贴近 Rust 的 Err(...) 语法)
@@ -60,6 +60,10 @@ E = TypeVar('E')
 U = TypeVar('U')
 
 
+class ResultException(Exception):
+    pass
+
+
 # ---------- 模块级构造函数(贴近 Rust 的 Ok/Err 语法) ---------- #
 
 
@@ -88,7 +92,7 @@ def Err(error: E) -> 'Result[Any, E]':
     演示:
         >>> r = Err('除数不能为零')
         >>> r
-        Err(除数不能为零)
+        Err('除数不能为零')
     """
     return Result.err(error)
 
@@ -109,7 +113,7 @@ class Result(Generic[T, E]):
             >>> Result(value=42, error=None)
             Ok(42)
             >>> Result(value=None, error='e')
-            Err(e)
+            Err('e')
         """
         self._value: Optional[T] = value
         self._error: Optional[E] = error
@@ -141,7 +145,7 @@ class Result(Generic[T, E]):
         返回: 失败状态的 Result
         演示:
             >>> Result.err('连接超时')
-            Err(连接超时)
+            Err('连接超时')
             >>> Result.err('连接超时').is_err()
             True
         """
@@ -160,7 +164,7 @@ class Result(Generic[T, E]):
             >>> Result.from_optional(42, '值为空')
             Ok(42)
             >>> Result.from_optional(None, '值为空')
-            Err(值为空)
+            Err('值为空')
         """
         if optional is not None:
             return cls.ok(optional)
@@ -180,7 +184,7 @@ class Result(Generic[T, E]):
             >>> Result.from_try(lambda: int('123'), lambda e: f'转换失败: {e}')
             Ok(123)
             >>> Result.from_try(lambda: int('abc'), lambda e: f'转换失败: {e}')
-            Err(转换失败: invalid literal for int() with base 10: 'abc')
+            Err("转换失败: invalid literal for int() with base 10: 'abc'")
         """
         try:
             return cls.ok(fn())
@@ -265,7 +269,7 @@ class Result(Generic[T, E]):
         演示:
             >>> Ok(42).ok_value()
             42
-            >>> Err('e').ok_value()
+            >>> print(Err('e').ok_value())
             None
         """
         return self._value if self._is_ok else None
@@ -280,7 +284,7 @@ class Result(Generic[T, E]):
         演示:
             >>> Err('e').err_value()
             'e'
-            >>> Ok(42).err_value()
+            >>> print(Ok(42).err_value())
             None
         """
         return self._error if not self._is_ok else None
@@ -420,7 +424,7 @@ class Result(Generic[T, E]):
         演示:
             >>> Ok(10).unwrap_or_default()
             10
-            >>> Err('e').unwrap_or_default()
+            >>> print(Err('e').unwrap_or_default())
             None
         """
         if self._is_ok:
@@ -441,7 +445,7 @@ class Result(Generic[T, E]):
             >>> Ok(10).map(lambda x: x * 2)
             Ok(20)
             >>> Err('e').map(lambda x: x * 2)
-            Err(e)
+            Err('e')
         """
         if self._is_ok:
             assert self._value is not None  # 类型收窄
@@ -497,7 +501,7 @@ class Result(Generic[T, E]):
         返回: Result[T, U](错误类型变为 U)
         演示:
             >>> Err('出错了').map_err(lambda e: RuntimeError(e))
-            Err(出错了)
+            Err(RuntimeError('出错了'))
             >>> Ok(42).map_err(lambda e: RuntimeError(e))
             Ok(42)
         """
@@ -537,7 +541,7 @@ class Result(Generic[T, E]):
             >>> Ok(10).and_then(lambda v: Result.ok(v + 1))
             Ok(11)
             >>> Err('e').and_then(lambda v: Result.ok(v + 1))
-            Err(e)
+            Err('e')
         """
         if self._is_ok:
             assert self._value is not None  # 类型收窄
@@ -573,11 +577,11 @@ class Result(Generic[T, E]):
         返回: Result[U, E]
         演示:
             >>> Result.ok(1).and_(Result.ok('a'))
-            Ok(a)
+            Ok('a')
             >>> Result.ok(1).and_(Result.err('e'))
-            Err(e)
+            Err('e')
             >>> Result.err('e1').and_(Result.ok('a'))
-            Err(e1)
+            Err('e1')
         """
         if self._is_ok:
             return other
@@ -685,9 +689,9 @@ class Result(Generic[T, E]):
             >>> Result.ok(1).zip(Result.ok('a'))
             Ok((1, 'a'))
             >>> Result.ok(1).zip(Result.err('e'))
-            Err(e)
+            Err('e')
             >>> Result.err('e1').zip(Result.ok('a'))
-            Err(e1)
+            Err('e1')
         """
         if self._is_ok and other.is_ok():
             assert self._value is not None and other._value is not None  # 类型收窄
@@ -710,7 +714,7 @@ class Result(Generic[T, E]):
             >>> Result.ok(1).zip_with(Result.ok(2), lambda a, b: a + b)
             Ok(3)
             >>> Result.ok(1).zip_with(Result.err('e'), lambda a, b: a + b)
-            Err(e)
+            Err('e')
         """
         if self._is_ok and other.is_ok():
             assert self._value is not None and other._value is not None  # 类型收窄
@@ -730,12 +734,12 @@ class Result(Generic[T, E]):
         功能: Ok(None) -> None; Ok(值) -> Ok(值); Err(e) -> Err(e)
         返回: Optional[Result[T, E]]
         演示:
-            >>> Result.ok(None).transpose()
+            >>> print(Result.ok(None).transpose())
             None
             >>> Result.ok(5).transpose()
             Ok(5)
             >>> Result.err('e').transpose()
-            Err(e)
+            Err('e')
         """
         if self._is_ok:
             if self._value is None:
@@ -758,7 +762,7 @@ class Result(Generic[T, E]):
             >>> Result.all([Ok(1), Ok(2), Ok(3)])
             Ok([1, 2, 3])
             >>> Result.all([Ok(1), Err('e'), Ok(3)])
-            Err(e)
+            Err('e')
         """
         values = []
         for result in results:
@@ -784,7 +788,7 @@ class Result(Generic[T, E]):
             >>> Result.any([Err('a'), Ok(1), Ok(2)])
             Ok(1)
             >>> Result.any([Err('a'), Err('b')])
-            Err(b)
+            Err('b')
         """
         for result in results:
             if result.is_ok():
@@ -808,9 +812,9 @@ class Result(Generic[T, E]):
             >>> Ok(5).filter(lambda v: v > 3, '太小')
             Ok(5)
             >>> Ok(1).filter(lambda v: v > 3, '太小')
-            Err(太小)
+            Err('太小')
             >>> Err('e').filter(lambda v: v > 3, '太小')
-            Err(e)
+            Err('e')
         """
         if not self._is_ok:
             return self
@@ -873,13 +877,13 @@ class Result(Generic[T, E]):
             >>> repr(Ok(42))
             'Ok(42)'
             >>> repr(Err('e'))
-            'Err(e)'
+            "Err('e')"
             >>> print(Ok([1, 2]))
             Ok([1, 2])
         """
         if self._is_ok:
-            return f"Ok({self._value})"
-        return f"Err({self._error})"
+            return f"Ok({self._value!r})"  # !r: 用 repr, 保留引号/类名, 输出无歧义
+        return f"Err({self._error!r})"
 
     def __bool__(self) -> bool:
         """
