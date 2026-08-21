@@ -125,8 +125,7 @@ class AliTTS(object):
         if 'GET' == method:
             result = ds_get(url=self._url, params=params)
         elif 'POST' == method:
-            data: str = json.dumps(params)  # Ali TTS POST 模式，参数需要传入Json格式的字符串
-            result = ds_post(self._url, data=data, headers={'Content-Type': 'application/json'})
+            result = ds_post(self._url, data=params, headers={'Content-Type': 'application/json'})
         else:
             return Err(ResultException('未能传入正确的请求方法'))
 

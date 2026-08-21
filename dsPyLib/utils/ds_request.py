@@ -7,6 +7,7 @@ __date__ = '2026-08-19 08:01:38'
     封装了常见的异常处理
 """
 
+import json
 from typing import Optional
 
 import requests
@@ -35,6 +36,10 @@ def ds_get(url: str, params: Optional[dict] = None, **kwargs) -> Result[requests
 
 def ds_post(url: str, data, headers: Optional[dict] = None, **kwargs) -> Result[requests.Response, Exception]:
     try:
+        # 如果data传入的是字典，则需要转换为Json字符串
+        if isinstance(data, dict):
+            data = json.dumps(data)
+
         response = requests.post(url=url, data=data, headers=headers, timeout=10, **kwargs)  # 设置了10秒超时
     except requests.exceptions.RequestException as e:
         return Err(e)
