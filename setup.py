@@ -26,11 +26,13 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
+        "glom",  # dict解析
         "requests",
         "psycopg2-binary",
         "python-dateutil",
         "pandas",
         "pyaudio",
+        "pydantic",  # dict转model
         "peewee",
         "configparser",
         "pika",
