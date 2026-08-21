@@ -12,7 +12,7 @@ import unittest
 from unittest import mock
 
 from dsConfigCenter import config_center
-from requests.exceptions import ContentDecodingError, ConnectionError, Timeout
+from requests.exceptions import ContentDecodingError, ConnectionError, HTTPError, Timeout
 
 from dsPyLib.ali.ali_access_token import AccessToken, TokenModel
 from dsPyLib.类型.ds_rust_style_result import Ok, Err, ResultException
@@ -110,12 +110,13 @@ class 测试create_token分支(unittest.TestCase):
 
     @mock.patch('dsPyLib.utils.ds_request.requests.get')
     def test_请求失败返回Err(self, mock_get):
+        # ds_get 用 raise_for_status() 检查状态码, 失败时返回原始 HTTPError(不再返回'响应失败'文案)
         响应 = self._构造响应(ok=False)
+        响应.raise_for_status.side_effect = HTTPError('404 Client Error')
         mock_get.return_value = 响应
         result = AccessToken.create_token('AK', 'SK')
-        self.assertTrue(result.is_err())
-        self.assertIsInstance(result.err_value(), Exception)
-        self._断言错误包含(result, '响应失败')
+        self._断言是Err(result)
+        self.assertIn('404', str(result.err_value()))
 
     @mock.patch('dsPyLib.utils.ds_request.requests.get')
     def test_响应非JSON返回Err(self, mock_get):
