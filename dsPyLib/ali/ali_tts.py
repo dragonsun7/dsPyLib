@@ -2,7 +2,6 @@
 __author__ = 'Dragon Sun'
 __date__ = '2019-12-30 12:49:13'
 
-import json
 import os
 import tempfile
 import threading

@@ -159,7 +159,8 @@ class 测试play_tts_sync(unittest.TestCase):
     def test_成功播放并清理临时文件(self, mock_play, mock_temp):
         临时 = _临时路径()
         mock_temp.return_value = 临时
-        open(临时, 'wb').write(b'x')  # 模拟合成产物
+        with open(临时, 'wb') as f:
+            f.write(b'x')  # 模拟合成产物
         try:
             with mock.patch.object(self.实例, '_request', return_value=Ok(临时)):
                 mock_play.return_value = Ok(临时)
@@ -176,7 +177,8 @@ class 测试play_tts_sync(unittest.TestCase):
     def test_播放失败传播Err并清理(self, mock_play, mock_temp):
         临时 = _临时路径()
         mock_temp.return_value = 临时
-        open(临时, 'wb').write(b'x')
+        with open(临时, 'wb') as f:
+            f.write(b'x')
         try:
             with mock.patch.object(self.实例, '_request', return_value=Ok(临时)):
                 mock_play.return_value = Err(ResultException('播放失败'))
@@ -221,7 +223,8 @@ class 测试play_tts_async(unittest.TestCase):
             self.assertEqual(捕获['file'], 临时)
 
             # 模拟播放完成, 触发回调 -> 临时文件被清理
-            open(临时, 'wb').write(b'x')
+            with open(临时, 'wb') as f:
+                f.write(b'x')
             self.assertTrue(os.path.exists(临时))
             捕获['回调'](Ok(临时))
             self.assertFalse(os.path.exists(临时), '回调应删除临时文件')
