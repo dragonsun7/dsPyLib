@@ -11,12 +11,12 @@ import pyaudio
 from dsPyLib.类型.ds_rust_style_result import Result, Ok, Err
 
 
-def play_wav(file: str) -> Result[None, Exception]:
+def play_wav(file: str) -> Result[str, Exception]:
     """
     同步播放WAV文件 (需要引用pyaudio)
     本函数不抛出异常 (为了异步播放的完成回调)
     :param file: WAV文件名
-    :return: 成功返回 Ok(None); 失败返回 Err(异常);
+    :return: 成功返回 Ok(文件名); 失败返回 Err(异常);
     """
 
     def _play():
@@ -48,20 +48,20 @@ def play_wav(file: str) -> Result[None, Exception]:
     except Exception as e:
         return Err(e)
     else:
-        return Ok(None)
+        return Ok(file)
 
 
 # 播放互斥锁: 保证同时只播放一段声音(线程安全, 无竞态)
 _locker = threading.Lock()
 
 
-def play_wav_async(file: str, complete_callback: Optional[Callable[[Result[None, Exception]], None]] = None) -> threading.Thread:
+def play_wav_async(file: str, complete_callback: Optional[Callable[[Result[str, Exception]], None]] = None) -> threading.Thread:
     """
     异步播放WAV文件 (需要引用pyaudio)
         注意：同时只能播放一段声音，后发起的播放会等待前一次播放完成
     :param file: WAV文件名
     :param complete_callback: 播放完成后的回调(无论成功或失败都会调用);
-        回调参数为播放结果的 Result(成功为 Ok(None), 失败为 Err(异常));
+        回调参数为播放结果的 Result(成功为 Ok(文件名), 失败为 Err(异常));
         回调在播放线程内、释放播放锁之后执行(不会阻塞排队中的播放, 也可安全地在回调里再次播放)
     :return: 播放线程对象, join() 会等待本次播放真正完成
     """
