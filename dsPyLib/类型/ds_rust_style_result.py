@@ -67,13 +67,13 @@ class ResultException(Exception):
 # ---------- 模块级构造函数(贴近 Rust 的 Ok/Err 语法) ---------- #
 
 
-def Ok(value: T) -> 'Result[T, Any]':
+def Ok(value: T) -> 'Result[T, E]':
     """
     创建成功结果(Rust 语法的 Ok(值) 对应物)
 
     功能: 包装成功值, 等价于 Result.ok(value)
     参数: value - 成功值(任意类型)
-    返回: Result[T, Any]
+    返回: Result[T, E](E 由使用处上下文推断)
     演示:
         >>> r = Ok(42)
         >>> r
@@ -82,13 +82,13 @@ def Ok(value: T) -> 'Result[T, Any]':
     return Result.ok(value)
 
 
-def Err(error: E) -> 'Result[Any, E]':
+def Err(error: E) -> 'Result[T, E]':
     """
     创建失败结果(Rust 语法的 Err(错误) 对应物)
 
     功能: 包装错误值, 等价于 Result.err(error)
     参数: error - 错误值(任意类型: str/Exception/自定义对象)
-    返回: Result[Any, E]
+    返回: Result[T, E](T 由使用处上下文推断)
     演示:
         >>> r = Err('除数不能为零')
         >>> r
