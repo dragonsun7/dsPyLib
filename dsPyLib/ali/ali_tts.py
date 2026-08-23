@@ -57,6 +57,8 @@ class AliTTS(object):
     def tts_to_file(self, text_data: str, file: str, method: HTTPMethod = 'POST') -> Result[str, Exception]:
         return self._request(text_data, file, method)
 
+    # noinspection PyTypeChecker
+    # PyCharm 2024.3 对 try/finally 中 return 的数据流分析存在 Bug(官方 PY-78964, 2025.1.1 已修复), 误报返回 None
     def play_tts_sync(self, text_data: str, method: HTTPMethod = 'POST') -> Result[None, Exception]:
         temp_file = self._create_temp_file_path()
 
