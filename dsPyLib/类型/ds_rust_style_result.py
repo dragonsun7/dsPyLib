@@ -53,7 +53,7 @@ __date__ = '2026-08-18 14:57:22'
         and_then_async (异步链式)
 """
 
-from typing import TypeVar, Generic, Union, Optional, Callable, Any, Coroutine, Iterator
+from typing import TypeVar, Generic, Union, Optional, Callable, Any, Coroutine, Iterator, cast
 
 T = TypeVar('T')
 E = TypeVar('E')
@@ -236,8 +236,7 @@ class Result(Generic[T, E]):
         """
         if not self._is_ok:
             return False
-        assert self._value is not None  # 类型收窄: 成功时必有值
-        return fn(self._value)
+        return fn(cast(T, self._value))
 
     def is_err_and(self, fn: Callable[[E], bool]) -> bool:
         """
@@ -254,8 +253,7 @@ class Result(Generic[T, E]):
         """
         if self._is_ok:
             return False
-        assert self._error is not None  # 类型收窄: 失败时必有错误
-        return fn(self._error)
+        return fn(cast(E, self._error))
 
     # ---------- 取值: 安全(Rust 对应 ok()/err()) ---------- #
 
@@ -308,8 +306,7 @@ class Result(Generic[T, E]):
         """
         if not self._is_ok:
             raise RuntimeError(f"调用了 unwrap(), 但 Result 是错误状态: {self._error}")
-        assert self._value is not None  # 类型收窄
-        return self._value
+        return cast(T, self._value)
 
     def unwrap_err(self) -> E:
         """
@@ -328,8 +325,7 @@ class Result(Generic[T, E]):
         """
         if self._is_ok:
             raise RuntimeError(f"调用了 unwrap_err(), 但 Result 是成功状态: {self._value}")
-        assert self._error is not None  # 类型收窄
-        return self._error
+        return cast(E, self._error)
 
     def expect(self, msg: str) -> T:
         """
@@ -349,8 +345,7 @@ class Result(Generic[T, E]):
         """
         if not self._is_ok:
             raise RuntimeError(f"{msg}: {self._error}")
-        assert self._value is not None  # 类型收窄
-        return self._value
+        return cast(T, self._value)
 
     def expect_err(self, msg: str) -> E:
         """
@@ -370,8 +365,7 @@ class Result(Generic[T, E]):
         """
         if self._is_ok:
             raise RuntimeError(f"{msg}: {self._value}")
-        assert self._error is not None  # 类型收窄
-        return self._error
+        return cast(E, self._error)
 
     # ---------- 取值: 兜底(Rust 对应 unwrap_or 系列) ---------- #
 
@@ -389,8 +383,7 @@ class Result(Generic[T, E]):
             0
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return self._value
+            return cast(T, self._value)
         return default
 
     def unwrap_or_else(self, fn: Callable[[E], T]) -> T:
@@ -407,10 +400,8 @@ class Result(Generic[T, E]):
             -1
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return self._value
-        assert self._error is not None  # 类型收窄
-        return fn(self._error)
+            return cast(T, self._value)
+        return fn(cast(E, self._error))
 
     def unwrap_or_default(self) -> Optional[T]:
         """
@@ -428,8 +419,7 @@ class Result(Generic[T, E]):
             None
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return self._value
+            return cast(T, self._value)
         return None
 
     # ---------- 转换(Rust 对应 map 系列) ---------- #
@@ -448,10 +438,8 @@ class Result(Generic[T, E]):
             Err('e')
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return Result.ok(fn(self._value))
-        assert self._error is not None  # 类型收窄
-        return Result.err(self._error)
+            return Result.ok(fn(cast(T, self._value)))
+        return Result.err(cast(E, self._error))
 
     def map_or(self, default: U, fn: Callable[[T], U]) -> U:
         """
@@ -468,8 +456,7 @@ class Result(Generic[T, E]):
             0
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return fn(self._value)
+            return fn(cast(T, self._value))
         return default
 
     def map_or_else(self, default_fn: Callable[[E], U], fn: Callable[[T], U]) -> U:
@@ -487,10 +474,8 @@ class Result(Generic[T, E]):
             -1
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return fn(self._value)
-        assert self._error is not None  # 类型收窄
-        return default_fn(self._error)
+            return fn(cast(T, self._value))
+        return default_fn(cast(E, self._error))
 
     def map_err(self, fn: Callable[[E], U]) -> 'Result[T, U]':
         """
@@ -506,10 +491,8 @@ class Result(Generic[T, E]):
             Ok(42)
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return Result.ok(self._value)
-        assert self._error is not None  # 类型收窄
-        return Result.err(fn(self._error))
+            return Result.ok(cast(T, self._value))
+        return Result.err(fn(cast(E, self._error)))
 
     def flatten(self) -> Union['Result', T]:
         """
@@ -544,10 +527,8 @@ class Result(Generic[T, E]):
             Err('e')
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return fn(self._value)
-        assert self._error is not None  # 类型收窄
-        return Result.err(self._error)
+            return fn(cast(T, self._value))
+        return Result.err(cast(E, self._error))
 
     def or_else(self, fn: Callable[[E], 'Result[T, U]']) -> 'Result[T, U]':
         """
@@ -563,10 +544,8 @@ class Result(Generic[T, E]):
             Ok(0)
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return Result.ok(self._value)
-        assert self._error is not None  # 类型收窄
-        return fn(self._error)
+            return Result.ok(cast(T, self._value))
+        return fn(cast(E, self._error))
 
     def and_(self, other: 'Result[U, E]') -> 'Result[U, E]':
         """
@@ -585,8 +564,7 @@ class Result(Generic[T, E]):
         """
         if self._is_ok:
             return other
-        assert self._error is not None  # 类型收窄
-        return Result.err(self._error)
+        return Result.err(cast(E, self._error))
 
     def or_(self, other: 'Result[T, E]') -> 'Result[T, E]':
         """
@@ -602,8 +580,7 @@ class Result(Generic[T, E]):
             Ok(1)
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return Result.ok(self._value)
+            return Result.ok(cast(T, self._value))
         return other
 
     # ---------- 检查(Rust 对应 contains/inspect) ---------- #
@@ -655,8 +632,7 @@ class Result(Generic[T, E]):
             True
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            fn(self._value)
+            fn(cast(T, self._value))
         return self
 
     def inspect_err(self, fn: Callable[[E], None]) -> 'Result[T, E]':
@@ -672,8 +648,7 @@ class Result(Generic[T, E]):
             True
         """
         if not self._is_ok:
-            assert self._error is not None  # 类型收窄
-            fn(self._error)
+            fn(cast(E, self._error))
         return self
 
     # ---------- 配对(Rust 对应 zip 系列) ---------- #
@@ -694,13 +669,10 @@ class Result(Generic[T, E]):
             Err('e1')
         """
         if self._is_ok and other.is_ok():
-            assert self._value is not None and other._value is not None  # 类型收窄
-            return Result.ok((self._value, other._value))
+            return Result.ok((cast(T, self._value), cast(U, other._value)))
         if self._is_ok:
-            assert other._error is not None  # 类型收窄
-            return Result.err(other._error)
-        assert self._error is not None  # 类型收窄
-        return Result.err(self._error)
+            return Result.err(cast(E, other._error))
+        return Result.err(cast(E, self._error))
 
     def zip_with(self, other: 'Result[U, E]', fn: Callable[[T, U], Any]) -> 'Result[Any, E]':
         """
@@ -717,13 +689,10 @@ class Result(Generic[T, E]):
             Err('e')
         """
         if self._is_ok and other.is_ok():
-            assert self._value is not None and other._value is not None  # 类型收窄
-            return Result.ok(fn(self._value, other._value))
+            return Result.ok(fn(cast(T, self._value), cast(U, other._value)))
         if self._is_ok:
-            assert other._error is not None  # 类型收窄
-            return Result.err(other._error)
-        assert self._error is not None  # 类型收窄
-        return Result.err(self._error)
+            return Result.err(cast(E, other._error))
+        return Result.err(cast(E, self._error))
 
     # ---------- 互转(Rust 对应 transpose) ---------- #
 
@@ -745,8 +714,7 @@ class Result(Generic[T, E]):
             if self._value is None:
                 return None
             return Result.ok(self._value)
-        assert self._error is not None  # 类型收窄
-        return Result.err(self._error)
+        return Result.err(cast(E, self._error))
 
     # ---------- 收集(扩展方法, 非 Rust 标准) ---------- #
 
@@ -768,11 +736,9 @@ class Result(Generic[T, E]):
         for result in results:
             if result.is_err():
                 err_value = result.err_value()
-                assert err_value is not None  # 类型收窄: 失败时必有错误
-                return Result.err(err_value)
+                return Result.err(cast(E, err_value))
             ok_value = result.ok_value()
-            assert ok_value is not None  # 类型收窄: 成功时必有值
-            values.append(ok_value)
+            values.append(cast(Any, ok_value))
         return Result.ok(values)
 
     @classmethod
@@ -818,8 +784,7 @@ class Result(Generic[T, E]):
         """
         if not self._is_ok:
             return self
-        assert self._value is not None  # 类型收窄
-        return Result.ok(self._value) if fn(self._value) else Result.err(err)
+        return Result.ok(cast(T, self._value)) if fn(cast(T, self._value)) else Result.err(err)
 
     # ---------- 迭代(Rust 对应 IntoIterator) ---------- #
 
@@ -838,8 +803,7 @@ class Result(Generic[T, E]):
             10
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            yield self._value
+            yield cast(T, self._value)
 
     # ---------- 异步(扩展方法, 非 Rust 标准) ---------- #
 
@@ -860,10 +824,8 @@ class Result(Generic[T, E]):
             r = asyncio.run(Ok(1).and_then_async(加一))  # Ok(2)
         """
         if self._is_ok:
-            assert self._value is not None  # 类型收窄
-            return await fn(self._value)
-        assert self._error is not None  # 类型收窄
-        return Result.err(self._error)
+            return await fn(cast(T, self._value))
+        return Result.err(cast(E, self._error))
 
     # ---------- 魔法方法 ---------- #
 
