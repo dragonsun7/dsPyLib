@@ -58,7 +58,8 @@ class AliTTS(object):
         return self._request(text_data, file, method)
 
     def play_tts_sync(self, text_data: str, method: HTTPMethod = 'POST') -> Result[None, Exception]:
-        temp_file = self._create_tempfile_path()
+        temp_file = self._create_temp_file_path()
+
         try:
             result = self.tts_to_file(text_data, temp_file, method)
             if result.is_err():
@@ -74,7 +75,7 @@ class AliTTS(object):
                 os.remove(temp_file)
 
     def play_tts_async(self, text_data: str, method: HTTPMethod = 'POST') -> Result[threading.Thread, Exception]:
-        temp_file = self._create_tempfile_path()
+        temp_file = self._create_temp_file_path()
 
         # 播放完成后清除临时文件(无论成功失败)
         def complete_callback(_):
@@ -91,8 +92,8 @@ class AliTTS(object):
     # ---------- 私有 ---------- #
 
     @staticmethod
-    def _create_tempfile_path() -> str:
-        filename = f'tmp_ali_tts_{str(uuid.uuid4()).replace('-', '')}.wav'
+    def _create_temp_file_path() -> str:
+        filename = f'tmp_ali_tts_{str(uuid.uuid4()).replace("-", "")}.wav'
         tmp_dir = Path(tempfile.gettempdir())
         tmp_file = str(tmp_dir / filename)
         return tmp_file
@@ -100,7 +101,7 @@ class AliTTS(object):
     def _request(self, text_data: str, file_path: str, method: HTTPMethod = 'POST') -> Result[str, Exception]:
         """
         请求生成语音
-            单次调用传入文本不能超过300个字符，否则超过300个字符的内容会被截断，只合成300个字符以内的内容
+            单次调用传入文本不能超过300个字符
         :param text_data: 要转换的文本
         :param file_path: 合成后语音文件路径
         :param method: 请求方法 'GET'、'POST'
