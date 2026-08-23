@@ -154,7 +154,7 @@ class 测试play_tts_sync(unittest.TestCase):
     def setUp(self):
         self.实例 = AliTTS('测试AK', '测试SK', '测试APP')
 
-    @mock.patch.object(AliTTS, '_create_tempfile_path')
+    @mock.patch.object(AliTTS, '_create_temp_file_path')
     @mock.patch('dsPyLib.ali.ali_tts.play_wav')
     def test_成功播放并清理临时文件(self, mock_play, mock_temp):
         临时 = _临时路径()
@@ -172,7 +172,7 @@ class 测试play_tts_sync(unittest.TestCase):
                 os.remove(临时)  # 双保险
         self.assertFalse(os.path.exists(临时), 'finally 应已删除临时文件')
 
-    @mock.patch.object(AliTTS, '_create_tempfile_path')
+    @mock.patch.object(AliTTS, '_create_temp_file_path')
     @mock.patch('dsPyLib.ali.ali_tts.play_wav')
     def test_播放失败传播Err并清理(self, mock_play, mock_temp):
         临时 = _临时路径()
@@ -203,7 +203,7 @@ class 测试play_tts_async(unittest.TestCase):
     def setUp(self):
         self.实例 = AliTTS('测试AK', '测试SK', '测试APP')
 
-    @mock.patch.object(AliTTS, '_create_tempfile_path')
+    @mock.patch.object(AliTTS, '_create_temp_file_path')
     @mock.patch('dsPyLib.ali.ali_tts.play_wav_async')
     def test_成功且播放完成后回调清理临时文件(self, mock_async, mock_temp):
         临时 = _临时路径()
@@ -239,15 +239,15 @@ class 测试play_tts_async(unittest.TestCase):
         self.assertIn('合成失败', str(结果.err_value()))
 
 
-class 测试_create_tempfile_path(unittest.TestCase):
+class 测试_create_temp_file_path(unittest.TestCase):
 
     def test_路径格式正确(self):
-        路径 = AliTTS._create_tempfile_path()
+        路径 = AliTTS._create_temp_file_path()
         self.assertTrue(路径.startswith(tempfile.gettempdir()))
         self.assertTrue(路径.endswith('.wav'))
         self.assertIn('tmp_ali_tts_', 路径)
         # 两次生成应不重复
-        self.assertNotEqual(路径, AliTTS._create_tempfile_path())
+        self.assertNotEqual(路径, AliTTS._create_temp_file_path())
 
 
 if __name__ == '__main__':
