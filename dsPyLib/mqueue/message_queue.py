@@ -32,10 +32,15 @@ def init_mq(username: str, password: str, host: str, port: int, virtual_host: st
 
 
 # 创建消息队列连接
-def create_mq_connection() -> pika.connection:
+def create_mq_connection() -> pika.BlockingConnection:
     credentials = pika.PlainCredentials(username=g_username, password=g_password)
-    parameters = pika.ConnectionParameters(host=g_host, port=g_port, virtual_host=g_virtual_host,
-                                           credentials=credentials, heartbeat=0)
+    parameters = pika.ConnectionParameters(
+        host=g_host,
+        port=g_port,
+        virtual_host=g_virtual_host,
+        credentials=credentials,
+        heartbeat=0
+    )
     connection = pika.BlockingConnection(parameters)
     return connection
 
