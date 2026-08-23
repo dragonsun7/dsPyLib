@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dsPyLib"
+version = "0.0.32"
+description = "A common python library for DS."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+keywords = ["dsPyLib"]
+authors = [{ name = "Dragon Sun", email = "dragonsun7@163.com" }]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "glom", # dict解析
+    "pandas",
+    "peewee", # PostgreSQL ORM
+    "pika",  # 消息队列
+    "prettytable",
+    "progressbar2",
+    "psutil",
+    "psycopg2-binary", # PostgreSQL
+    "pyaudio", # 音频
+    "pydantic", # dict转model
+    "pysnowflake", # 雪花ID
+    "python-dateutil",
+    "rpyc",
+]
+
+[project.urls]
+Homepage = "https://github.com/dragonsun7/dsPyLib"
+
+[tool.setuptools]
+packages = { find = { } }
+include-package-data = true
+zip-safe = true
