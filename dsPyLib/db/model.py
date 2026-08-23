@@ -4,7 +4,7 @@ __date__ = '2020-05-18 01:15:37'
 
 from peewee import Model, SQL, DateTimeField, CharField
 
-from dsPyLib.peewee.db_mgr import DBMgr
+from dsPyLib.db.db import database_proxy
 
 
 class DBBaseModel(Model):
@@ -15,13 +15,13 @@ class DBBaseModel(Model):
         return [getattr(cls, x) for x in 属性名列表]
 
     class Meta:
-        # database = database_proxy
-        database = DBMgr.get_database()
+        database = database_proxy  # 懒加载: import 时不创建连接池, init_db() 后代理指向真实连接池
 
 
 class DBStandardModel(DBBaseModel):
-    created = DateTimeField(formats='%Y-%m-%d %H:%M:%S.%f', constraints=[SQL('DEFAULT CURRENT_TIMESTAMP')],
+    # peewee 4.x: formats 需为 list(传入 str 会导致 format_date_time 逐字符遍历, 解析失败)
+    created = DateTimeField(formats=['%Y-%m-%d %H:%M:%S.%f'], constraints=[SQL('DEFAULT CURRENT_TIMESTAMP')],
                             help_text='创建时间')
-    updated = DateTimeField(formats='%Y-%m-%d %H:%M:%S.%f', constraints=[SQL('DEFAULT CURRENT_TIMESTAMP')],
+    updated = DateTimeField(formats=['%Y-%m-%d %H:%M:%S.%f'], constraints=[SQL('DEFAULT CURRENT_TIMESTAMP')],
                             help_text='更新时间')
     remark = CharField(default='', max_length=512, help_text='备注')
