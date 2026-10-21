@@ -3,8 +3,7 @@ __author__ = 'Dragon Sun'
 __date__ = '2020-01-30 15:33:30'
 
 import threading
-from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Protocol
 
 from peewee import Proxy
 from playhouse.pool import PooledPostgresqlDatabase
@@ -90,16 +89,15 @@ from dsPyLib.类型.ds_rust_style_result import Result, Ok, Err
 database_proxy = Proxy()
 
 
-# 数据库连接池配置(不可变，仅能初始化时指定属性值，保证类型安全)
-@dataclass(frozen=True)
-class DBConf:
+# 数据库连接池配置
+class DBConf(Protocol):
     host: str
     port: int
     username: str
     password: str
     database: str
-    max_connections: int = 50
-    stale_timeout: int = 30
+    max_connections: int  # 例如： 50
+    stale_timeout: int  # 例如： 30
 
 
 # 内部使用的公共变量

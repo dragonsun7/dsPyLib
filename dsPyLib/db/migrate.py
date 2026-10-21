@@ -130,3 +130,24 @@ class DBMigrate(object):
                 sql = fp.read()
                 sql = sql.replace('__table_name__', table_name)
                 self.db.execute_sql(sql=sql)
+
+    # @staticmethod
+    # def _load_sql(sql_name: str, replace: list = None) -> str:
+    #     """
+    #     从SQL文件中加载SQL文本
+    #     :param sql_name: SQL文件名(纯名称，不带路径，默认路径为sql目录)
+    #     :param replace: 用于替代SQL文本中的内容(列表中的每个元素为字典，在SQL文本中查找字典中的key，并替换为字典中的value)
+    #     :return: SQL文件中的文本
+    #
+    #     例子：
+    #         table_name = model._meta.table.__name__
+    #         sql = self._load_sql('add_trigger_updated.sql', replace=[{'__table_name__': table_name}])  # 支持自动更新updated字段
+    #     """
+    #     sql_file = os.path.join(os.path.dirname(__file__), '../sql', sql_name)
+    #     with open(sql_file, 'r', encoding='utf8') as fp:
+    #         sql_str = fp.read()
+    #         if replace:
+    #             for d in replace:
+    #                 for k, v in d.items():
+    #                     sql_str = sql_str.replace(k, v)
+    #         return sql_str
