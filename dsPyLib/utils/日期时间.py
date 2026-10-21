@@ -2,33 +2,53 @@
 __author__ = 'Dragon Sun'
 __date__ = '2024-08-15 09:10:31'
 
-from datetime import datetime, date, time, timedelta, timezone
-from typing import Union, List
+from datetime import datetime, date, time, timedelta, timezone, tzinfo
+from typing import Union, List, TypeAlias
+from zoneinfo import ZoneInfo
 
 from dateutil.parser import parse, ParserError
 
+时间类型: TypeAlias = Union[datetime, date, str]
 
-def 转时间(时间: Union[datetime, date, str]) -> datetime:
+上海时区 = ZoneInfo("Asia/Shanghai")
+
+
+def 转时间(时间: 时间类型, 时区: tzinfo = 上海时区) -> datetime:
     """
-    将输入的日期时间对象或字符串转换为 datetime 对象。
+    将输入的日期时间对象或字符串转换为 datetime 对象，统一为指定时区（默认上海时区）。
 
-    :param 时间: 输入的日期时间对象或字符串，可以是 datetime、date 或 str 类型。
+        支持输入 datetime
+        支持输入 date -> 转换为 0点的datetime
+        支持输入日期字符串：
+            '2024-01-01 12:00:00'
+            '2024-01-01T12:00:00+08:00'
+            '2024-01-01T04:00:00Z'
+
+    :param 时间: 输入的日期时间对象或字符串，可以是 datetime、date 或 str 类型
+    :param 时区: 输出时间的时区
     :return: 转换后的 datetime 对象。
-    :raises ValueError: 如果输入类型不支持或字符串解析失败。
+    :raises ValueError: 如果输入类型不支持、时区为 None、解析时间字符串失败。
     """
-    if isinstance(时间, datetime):
-        return 时间
-    elif isinstance(时间, date):
-        return datetime.combine(时间, time(0, 0, 0))
-    elif isinstance(时间, str):
+    if 时区 is None:
+        raise ValueError('时区不能为 None')
+
+    if isinstance(时间, datetime):  # datetime需要在date前面判断，因为datetime是date的子类
+        return 时间.astimezone(tz=时区) if 时间.tzinfo else 时间.replace(tzinfo=时区)
+
+    if isinstance(时间, date):
+        return datetime.combine(时间, time(0, 0, 0), tzinfo=时区)
+
+    if isinstance(时间, str):
         try:
-            return parse(时间)
-        except ParserError:
-            raise ValueError(f'解析时间字符串失败，传入的字符串为：{时间}')
-    raise ValueError('传入的时间类型必须为[[datetime, date, str]之一')
+            结果 = parse(时间)
+            return 结果.astimezone(tz=时区) if 结果.tzinfo else 结果.replace(tzinfo=时区)
+        except ParserError as e:
+            raise ValueError(f'解析时间字符串失败，传入的字符串为：{时间}') from e
+
+    raise ValueError(f'传入的时间类型必须为[datetime, date, str]之一，实际为 {type(时间).__name__}')
 
 
-def 转时间列表(时间列表: list[Union[datetime, date, str]]) -> List[datetime]:
+def 转时间列表(时间列表: list[时间类型]) -> List[datetime]:
     """
     将输入的日期时间对象或字符串列表转换为 datetime 对象列表。
 

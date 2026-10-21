@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime, date, time, timedelta, timezone
 
 # 导入待测试的函数
-from dsPyLib.utils.日期时间 import 转时间, 转时间列表, 时间戳转标准时间, 时间戳转北京时间
+from dsPyLib.utils.日期时间 import 转时间, 转时间列表, 时间戳转标准时间, 时间戳转北京时间, 上海时区
 
 
 class TestDateTimeFunctions(unittest.TestCase):
@@ -18,7 +18,8 @@ class TestDateTimeFunctions(unittest.TestCase):
         """
         now = datetime.now()
         result = 转时间(now)
-        self.assertEqual(result, now)
+        self.assertEqual(result, now.astimezone(上海时区))
+        self.assertIs(result.tzinfo, 上海时区)
 
     def test_转时间_date(self):
         """
@@ -26,9 +27,10 @@ class TestDateTimeFunctions(unittest.TestCase):
         验证返回值是否为当天的 datetime 对象（时间部分为 00:00:00）。
         """
         today = date.today()
-        expected = datetime.combine(today, time(0, 0, 0))
+        expected = datetime.combine(today, time(0, 0, 0)).astimezone(tz=上海时区)
         result = 转时间(today)
         self.assertEqual(result, expected)
+        self.assertIs(result.tzinfo, 上海时区)
 
     def test_转时间_str(self):
         """
@@ -36,9 +38,15 @@ class TestDateTimeFunctions(unittest.TestCase):
         验证返回值是否为正确的 datetime 对象。
         """
         time_str = "2024-08-15 12:00:00"
-        expected = datetime(2024, 8, 15, 12, 0, 0)
+        expected = datetime(2024, 8, 15, 12, 0, 0).astimezone(tz=上海时区)
         result = 转时间(time_str)
         self.assertEqual(result, expected)
+        self.assertIs(result.tzinfo, 上海时区)
+
+    def test_转时间_三种输入等价(self):
+        utc = datetime(2024, 1, 1, 4, 0, 0, tzinfo=timezone.utc)
+        self.assertEqual(转时间(utc), 转时间("2024-01-01T04:00:00Z"))
+        self.assertEqual(转时间(utc), 转时间("2024-01-01T12:00:00+08:00"))
 
     def test_转时间_str_invalid(self):
         """
@@ -58,14 +66,26 @@ class TestDateTimeFunctions(unittest.TestCase):
             # noinspection PyTypeChecker
             转时间(123)  # 输入为 int 类型
 
+    def test_转时间_时间戳无变化(self):
+        utc = datetime(2024, 1, 1, 4, 0, 0, tzinfo=timezone.utc)
+        self.assertEqual(转时间(utc).timestamp(), utc.timestamp())
+
     def test_转时间列表(self):
         """
         测试 转时间列表 函数。
         输入为包含 str、date 和 datetime 的列表。
         验证返回值是否为正确的 datetime 对象列表。
         """
-        input_list = ["2024-08-15 12:00:00", date(2024, 8, 15), datetime(2024, 8, 15, 12, 0, 0)]
-        expected = [datetime(2024, 8, 15, 12, 0, 0), datetime(2024, 8, 15, 0, 0, 0), datetime(2024, 8, 15, 12, 0, 0)]
+        input_list = [
+            "2024-08-15 12:00:00",
+            date(2024, 8, 15),
+            datetime(2024, 8, 15, 12, 0, 0)
+        ]
+        expected = [
+            datetime(2024, 8, 15, 12, 0, 0).astimezone(上海时区),
+            datetime(2024, 8, 15, 0, 0, 0).astimezone(上海时区),
+            datetime(2024, 8, 15, 12, 0, 0).astimezone(上海时区),
+        ]
         result = 转时间列表(input_list)
         self.assertEqual(result, expected)
 
@@ -77,7 +97,7 @@ class TestDateTimeFunctions(unittest.TestCase):
         from zoneinfo import ZoneInfo
         expected = datetime(2025, 1, 1, 0, 0, 0, tzinfo=ZoneInfo('UTC'))
         毫秒时间戳 = int(expected.timestamp()) * 1000
-        print(毫秒时间戳, expected)
+        # print(毫秒时间戳, expected)
         result = 时间戳转标准时间(毫秒时间戳)
         self.assertEqual(result, expected)
 
@@ -89,6 +109,10 @@ class TestDateTimeFunctions(unittest.TestCase):
         北京时区 = timezone(timedelta(hours=8))
         expected = datetime(2025, 1, 1, 0, 0, 0, tzinfo=北京时区)
         毫秒时间戳 = int(expected.timestamp()) * 1000
-        print(毫秒时间戳, expected)
+        # print(毫秒时间戳, expected)
         result = 时间戳转北京时间(毫秒时间戳)
         self.assertEqual(result, expected)
+
+
+if __name__ == '__main__':
+    unittest.main()
