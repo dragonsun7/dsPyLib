@@ -38,7 +38,7 @@ def 发布任务():
 
 if __name__ == '__main__':
     消息队列配置 = config_center.get_rabbitmq(host='ali-hk')
-    发布者 = 广播发布者类(配置=消息队列配置, virtual_host='Crypto', exchange_name='crypto.fanout')
+    发布者 = 广播发布者类(配置=消息队列配置, virtual_host='Crypto', exchange_name='crypto.fanout.demo')
     try:
         result = 发布者.连接()
         if result.is_err():

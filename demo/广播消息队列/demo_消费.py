@@ -17,7 +17,7 @@ def 消息处理(desc: str, data: Any) -> None:
 
 if __name__ == '__main__':
     消息队列配置 = config_center.get_rabbitmq(host='ali-hk')
-    消费者 = 广播消费者类(配置=消息队列配置, virtual_host='Crypto', exchange_name='crypto.fanout', 消息处理回调=消息处理)
+    消费者 = 广播消费者类(配置=消息队列配置, virtual_host='Crypto', exchange_name='crypto.fanout.demo', 消息处理回调=消息处理)
     try:
         result = 消费者.连接()
         if result.is_err():
