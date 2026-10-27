@@ -30,7 +30,21 @@ __date__ = '2026-10-26 14:55:27'
         消息分发：Fanout 交换机把消息复制到每一个当前存在的绑定队列。每个消费者从自己的队列里拿到一份。
         无消费者时：
             如果没有任何队列绑定（所有消费者都离线），消息到达 Fanout 交换机后直接被丢弃，因为交换机本身不存储消息。
-            即使有残留队列但消费者已断开，x-message-ttl 也会让消息过期删除。            
+            即使有残留队列但消费者已断开，x-message-ttl 也会让消息过期删除。         
+            
+            
+    threading.Event() 详解
+        Event 是 Python 线程间最简单的同步原语之一，本质是一个线程安全的布尔标志位，用来实现"一个线程通知另一个（或多个）线程：某件事发生了，可以继续了"。
+        
+        Event 内部维护一个布尔标志（flag），默认 False：
+        set()：把标志设为 True，唤醒所有等待的线程
+        clear()：把标志设回 False
+        wait(timeout=None)：阻塞当前线程，直到标志为 True 或超时
+        is_set()：查询标志当前是否为 True
+        可以理解成一个红绿灯：红灯（未 set）时所有车（线程）在 wait() 处停住；绿灯（set）时全部放行。
+        
+        注意：
+            set() 是"广播"，做不到"只唤醒一个"
 """
 
 import pickle
@@ -42,7 +56,15 @@ from pika.adapters.thread_safe_connection import Connection, Channel
 from pika.spec import Basic, BasicProperties
 
 from dsPyLib.utils.logging import logger
+from dsPyLib.基类.枚举基类 import 枚举基类
 from dsPyLib.类型.ds_rust_style_result import Result, Ok, Err
+
+
+class 角色枚举(枚举基类):
+    发布者 = '发布者'
+    消费者 = '消费者'
+    未知 = '未知'
+
 
 消息处理回调类型: TypeAlias = Callable[[str, Any], None]  # 实现形式：def 消息处理(desc: str, data: Any) -> None:
 
@@ -55,7 +77,6 @@ class 消息队列配置信息协议(Protocol):
 
 
 class _基类(object):
-    """连接、交换机声明、安全关闭的公共逻辑。"""
 
     def __init__(self, 配置: 消息队列配置信息协议, virtual_host: str, exchange_name: str):
         self.配置 = 配置
@@ -67,24 +88,75 @@ class _基类(object):
 
         self._lock = threading.RLock()  # 线程锁
 
+        # 重连相关
+        self._手动断开序数 = 0
+        self._重连中 = False
+        self._停止重连 = threading.Event()
+
     # ---------------------------------------- 对外 ---------------------------------------- #
 
     @property
     def 已连接(self) -> bool:
         return bool(self._conn and self._conn.is_open and self._channel and self._channel.is_open)
 
+    @property
+    def 角色(self) -> 角色枚举:
+        if isinstance(self, 广播发布者类):
+            return 角色枚举.发布者
+        if isinstance(self, 广播消费者类):
+            return 角色枚举.消费者
+        return 角色枚举.未知
+
     def 连接(self) -> Result[None, Exception]:
+        return self._连接(_来自重连=False)
+
+    def 断开(self) -> None:
+        self._停止重连.set()  # 唤醒并终止重连线程(只有用户主动断开才 set)
+        self._断开()
+
+    # ---------------------------------------- 私有 ---------------------------------------- #
+
+    def _连接(self, _来自重连: bool = False) -> Result[None, Exception]:
         """
-        连接整合了三个步骤：
+        _连接 整合了三个步骤：
             1. 创建一个链接，并赋给 self_conn
             2. 打开一个新信道，并赋给 self._channel
             3. 声明交换机
+
+        来自重连 参数说明:
+            竞态：用户 断开() 与重连线程中的 _连接() 交错
+            _停止重连.set() 只能打断“正在 wait() 的线程”，管不住“已经进入 连接() 的线程”。
+            可能用户已经主动 断开() 了，连接又被重连线程建了回来
+
+            可能的时序
+                主线程                               重连线程
+                断开()
+                    _停止重连.set()
+                    _手动断开序数 += 1
+                    close()
+                    释放锁
+                                                      _连接()          ← 此时才拿到锁
+                                                        if 已连接: False
+                                                        self._断开()    (no-op)
+                                                        self._停止重连.clear()   ← 把用户的停止信号清掉了
+                                                        建连接
+                                                      返回 Ok
+                                                      _重连循环 return
         """
 
         with self._lock:
             try:
-                # 先断开旧连接
-                self.断开()
+                if self.已连接:
+                    return Ok(None)
+
+                # 如果是重连线程发起的重连，且当前已经设置了停止重连，则返回错误
+                if _来自重连 and self._停止重连.is_set():
+                    return Err(ConnectionError('重连已取消，不再连接'))
+
+                self._断开()  # 不会 set()，这样避免非主动断开导致重连线程退出
+                self._停止重连.clear()  # 连接期间允许重连
+
+                手动断开序数 = self._手动断开序数
 
                 # 准备连接参数
                 parameters = pika.ConnectionParameters(
@@ -103,7 +175,10 @@ class _基类(object):
                 )
 
                 # Connection 连接建立后，IOLoop 自动在后台线程运行，不阻塞主线程(这是 SelectConnection, BlockingConnection 不具备的)
-                self._conn = Connection(parameters=parameters, on_close_callback=self._handle_close_callback)  # 关闭时的回调
+                self._conn = Connection(
+                    parameters=parameters,
+                    on_close_callback=lambda connection, reason: self._handle_close_callback(connection, reason, 手动断开序数),
+                )
 
                 # 打开一个新信道
                 self._channel = self._conn.channel()
@@ -117,23 +192,25 @@ class _基类(object):
 
                 return Ok(None)
             except Exception as e:
-                self.断开()
+                self._断开()
                 return Err(e)
 
-    def 断开(self) -> None:
+    def _断开(self) -> None:
         """
+            为什么要加锁？
+                close() 本身线程安全，加锁不是为了保护 pika，
+                而是保护 self._conn 和 self._channel 的"检查 → 使用/替换"序列。
+                比如：需要保证在 “检查连接 → 发布” 期间，没人把 self._conn 和 self._channel 换掉或关掉
+
             先摘掉引用再关闭：
                 1. 幂等：重复调用不会再次 close
                 2. 状态一致：已连接 立即变 False，close 阻塞期间不会被误判为可用
                 3. 异常安全：close 失败也不会留下"半关闭但仍被引用"的对象
                 局部变量 channel/conn 负责在置 None 之后仍能完成关闭。
-
-            为什么要加锁？
-                close() 本身线程安全，加锁不是为了保护 pika，
-                而是保护 self._conn 和 self._channel 的"检查 → 使用/替换"序列。
-                比如：需要保证在 “检查连接 → 发布” 期间，没人把 self._conn 和 self._channel 换掉或关掉
         """
         with self._lock:
+            self._手动断开序数 += 1
+
             channel, conn = self._channel, self._conn
             self._channel = None
             self._conn = None
@@ -144,15 +221,48 @@ class _基类(object):
 
                 try:
                     if obj.is_open:
-                        obj.close(timeout=5)
+                        obj.close(timeout=3)
                 except Exception as e:
-                    logger.warning(f'关闭 {名称} 失败: {e!r}')
+                    logger.exception(f'关闭 {名称} 失败: {e!r}')
 
-    # ---------------------------------------- 私有 ---------------------------------------- #
+    def _handle_close_callback(self, _, reason, 手动断开序数: int):
+        # 在这里处理断线重连
+        # (self, connection, reason, 手动断开序数: int)
 
-    def _handle_close_callback(self, connection, reason):
-        # 在这里处理断线重连(暂不处理)
-        pass
+        # 手动断开序数是在连接时传入的，当手动断开时，该序数会增加1，这样就会和传入的参数不一致，从而判断出是手动断开
+        if self._手动断开序数 != 手动断开序数:
+            logger.info('手动断开')
+            return
+
+        # 意外断开则自动重连
+        if self._重连中:
+            return
+        self._重连中 = True
+        logger.info(f'意外断开：{reason!r}，开始重连')
+        threading.Thread(target=self._重连循环, daemon=True, name='mq-reconnect').start()
+
+    def _重连循环(self):
+        delay = 1.0
+        重连次数 = 0
+
+        try:
+            while not self._停止重连.wait(delay):  # Event.wait(delay) 一举两得：平时当 sleep，断开() 时能立刻唤醒退出。
+                if self.已连接:
+                    return
+
+                重连次数 += 1
+                logger.info(f'{self.角色.name} 尝试重新连接({重连次数})...')
+
+                result = self._连接(_来自重连=True)
+                if result.is_ok():
+                    logger.info('重连成功')
+                    return
+
+                e = result.unwrap_err()
+                logger.error(f'重连失败: {e!r}')
+                delay = min(delay * 2, 30.0)  # 每失败一次，等待时间翻倍，30秒封顶，避免重连风暴
+        finally:
+            self._重连中 = False
 
 
 class 广播发布者类(_基类):
@@ -195,12 +305,15 @@ class 广播消费者类(_基类):
 
         self.消息处理回调: Optional[消息处理回调类型] = 消息处理回调
 
-    def 连接(self) -> Result[None, Exception]:
+    def _连接(self, _来自重连: bool = False) -> Result[None, Exception]:
         """
         连接后立即进入消费状态
         """
         with self._lock:
-            result = super().连接()
+            if self.已连接:
+                return Ok(None)
+
+            result = super()._连接(_来自重连=_来自重连)
             if result.is_err():
                 return result
 
@@ -233,7 +346,7 @@ class 广播消费者类(_基类):
                 )
                 return Ok(None)
             except Exception as e:
-                self.断开()
+                self._断开()
                 return Err(e)
 
     # ---------------------------------------- 私有 ---------------------------------------- #

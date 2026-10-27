@@ -40,11 +40,13 @@ if __name__ == '__main__':
     消息队列配置 = config_center.get_rabbitmq(host='ali-hk')
     发布者 = 广播发布者类(配置=消息队列配置, virtual_host='Crypto', exchange_name='crypto.fanout.demo')
     try:
+        logger.info('开始连接...')
         result = 发布者.连接()
         if result.is_err():
             e = result.unwrap_err()
             logger.error(f'发布者连接错误：{e}')
             raise SystemExit(-1)
+        logger.info('连接成功')
 
         发布任务()
     finally:

@@ -19,11 +19,14 @@ if __name__ == '__main__':
     消息队列配置 = config_center.get_rabbitmq(host='ali-hk')
     消费者 = 广播消费者类(配置=消息队列配置, virtual_host='Crypto', exchange_name='crypto.fanout.demo', 消息处理回调=消息处理)
     try:
+        logger.info('开始连接...')
         result = 消费者.连接()
         if result.is_err():
             e = result.unwrap_err()
             logger.error(f'消费者连接错误：{e}')
             raise SystemExit(-1)
-        threading.Event().wait()
+        logger.info('连接成功')
+
+        threading.Event().wait()  # 阻塞主线程
     finally:
         消费者.断开()
