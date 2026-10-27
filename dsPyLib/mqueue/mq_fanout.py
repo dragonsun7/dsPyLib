@@ -167,7 +167,7 @@ class _基类(object):
                         username=self.配置.username,
                         password=self.配置.password,
                     ),
-                    heartbeat=20,  # 20s 心跳，约 40s 可发现断连
+                    heartbeat=30,  # 30s 心跳，约 40s 可发现断连
                     blocked_connection_timeout=30,  # broker 资源告警时不无限挂起
                     client_properties={
                         'connection_name': f'dsPyLib.mq_fanout.{type(self).__name__}.{self.exchange_name}',  # 便于在 RabbitMQ 管理界面按名称定位连接
@@ -260,7 +260,7 @@ class _基类(object):
 
                 e = result.unwrap_err()
                 logger.error(f'重连失败: {e!r}')
-                delay = min(delay * 2, 30.0)  # 每失败一次，等待时间翻倍，30秒封顶，避免重连风暴
+                delay = min(delay * 2, 30.0)  # 退避策略：每失败一次，等待时间翻倍，30秒封顶，避免重连风暴
         finally:
             self._重连中 = False
 
