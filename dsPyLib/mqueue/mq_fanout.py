@@ -166,8 +166,7 @@ class _基类(object):
                 logger.info(f'{self.角色.name} 开始连接...')
 
                 if self.已连接:
-                    self._连接成功处理()
-                    return Ok(None)
+                    return Ok(None)  # 这里就不触发 连接成功回调 了
 
                 # 如果是重连线程发起的重连，且当前已经设置了停止重连，则返回错误
                 if _来自重连 and self._停止重连.is_set():
