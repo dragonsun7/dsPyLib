@@ -186,7 +186,7 @@ class _基类(object):
                         username=self.配置.username,
                         password=self.配置.password,
                     ),
-                    heartbeat=30,  # 30s 心跳，约 40s 可发现断连
+                    heartbeat=30,  # 心跳间隔(秒)
                     blocked_connection_timeout=30,  # broker 资源告警时不无限挂起
                     client_properties={
                         'connection_name': f'dsPyLib.mq_fanout.{type(self).__name__}.{self.exchange_name}',  # 便于在 RabbitMQ 管理界面按名称定位连接
@@ -296,9 +296,19 @@ class _基类(object):
             self.连接成功回调()
 
     def _连接断开处理(self, 断开类型: 断开类型枚举, 原因: Exception):
-        logger.error(f'连接断开：{断开类型.name}, {原因}')
+        """
+            _handle_close_callback 是 pika 在 IOLoop 线程调用的。
+            用户的 连接断开回调 如果做阻塞操作（写数据库、发 HTTP、操作 UI），会卡住 IOLoop，导致心跳发不出去、后续帧处理延迟。
+            所以把回调丢到独立线程执行
+        """
+        tip = f'连接断开：{断开类型.name}, {原因}'
+        if 断开类型 == 断开类型枚举.主动断开:
+            logger.info(tip)
+        else:
+            logger.error(tip)
+
         if self.连接断开回调:
-            self.连接断开回调(断开类型, 原因)
+            threading.Thread(target=self.连接断开回调, args=(断开类型, 原因), daemon=True).start()
 
 
 class 广播发布者类(_基类):
