@@ -20,7 +20,7 @@ dependencies = [
     "glom", # dict解析
     "pandas",
     "peewee", # PostgreSQL ORM
-    "pika",  # 消息队列
+    "pika>=1.5.0rc1", # 消息队列
     "prettytable",
     "progressbar2",
     "psutil",

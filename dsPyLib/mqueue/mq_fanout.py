@@ -209,12 +209,11 @@ class _基类(object):
                     durable=True,  # 长久保持
                 )
 
-                # 连接成功
                 self._连接成功处理()
                 return Ok(None)
             except Exception as e:
                 self._断开()
-                logger.error(f'连接失败：{e}')
+                logger.exception(f'连接失败：{e}')
                 return Err(e)
 
     def _断开(self) -> None:
@@ -293,7 +292,11 @@ class _基类(object):
     def _连接成功处理(self):
         logger.info('连接成功！')
         if self.连接成功回调:
-            self.连接成功回调()
+            # 连接成功回调(为了防止回调异常触发断开，所以单独包一层try)
+            try:
+                self.连接成功回调()
+            except Exception as e:
+                logger.exception(f'连接成功回调 执行失败：{e}')
 
     def _连接断开处理(self, 断开类型: 断开类型枚举, 原因: Exception):
         """
@@ -301,14 +304,20 @@ class _基类(object):
             用户的 连接断开回调 如果做阻塞操作（写数据库、发 HTTP、操作 UI），会卡住 IOLoop，导致心跳发不出去、后续帧处理延迟。
             所以把回调丢到独立线程执行
         """
-        tip = f'连接断开：{断开类型.name}, {原因}'
+        tip = f'连接断开：{断开类型.name}, {原因!r}'
         if 断开类型 == 断开类型枚举.主动断开:
             logger.info(tip)
         else:
             logger.error(tip)
 
         if self.连接断开回调:
-            threading.Thread(target=self.连接断开回调, args=(断开类型, 原因), daemon=True).start()
+            def _run():
+                try:
+                    self.连接断开回调(断开类型, 原因)
+                except Exception as e:
+                    logger.exception(f'连接断开回调 执行失败：{e}')
+
+            threading.Thread(target=_run, daemon=True).start()
 
 
 class 广播发布者类(_基类):
