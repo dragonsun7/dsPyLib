@@ -163,12 +163,7 @@ class _基类(object):
 
         with self._lock:
             try:
-                角色 = '未知角色'
-                if isinstance(self, 广播发布者类):
-                    角色 = '广播发布者'
-                if isinstance(self, 广播消费者类):
-                    角色 = '广播消费者'
-                logger.info(f'{角色} 开始连接...')
+                logger.info(f'{self.角色.name} 开始连接...')
 
                 if self.已连接:
                     self._连接成功处理()
