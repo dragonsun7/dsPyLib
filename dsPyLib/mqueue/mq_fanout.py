@@ -72,7 +72,7 @@ class 断开类型枚举(枚举基类):
     重连断开 = '重连断开'
 
 
-消息回调处理类型: TypeAlias = Callable[[str, Any], None]  # 实现形式：def 消息回调处理(desc: str, data: Any) -> None:
+消息回调类型: TypeAlias = Callable[[str, Any], None]  # 实现形式：def 消息回调处理(desc: str, data: Any) -> None:
 连接成功回调处理类型: TypeAlias = Callable[[], None]  # 实现形式： def 连接成功回调处理() -> None:
 连接断开回调处理类型: TypeAlias = Callable[[断开类型枚举, Exception], None]  # 实现形式： def 连接断开回调处理(断开类型: 断开类型枚举, 原因: Exception) -> None:
 
@@ -360,13 +360,13 @@ class 广播消费者类(_基类):
             配置: 消息队列配置信息协议,
             virtual_host: str,
             exchange_name: str,
-            消息回调处理: 消息回调处理类型,
+            消息回调: 消息回调类型,
             连接成功回调: Optional[连接成功回调处理类型] = None,
             连接断开回调: Optional[连接断开回调处理类型] = None
     ):
         super().__init__(配置=配置, virtual_host=virtual_host, exchange_name=exchange_name, 连接成功回调=连接成功回调, 连接断开回调=连接断开回调)
 
-        self.消息处理回调: Optional[消息回调处理类型] = 消息回调处理
+        self.消息回调: Optional[消息回调类型] = 消息回调
 
     def _连接(self, _来自重连: bool = False) -> Result[None, Exception]:
         """
@@ -429,6 +429,6 @@ class 广播消费者类(_基类):
             return
 
         try:
-            self.消息处理回调(d['desc'], d['data'])
+            self.消息回调(d['desc'], d['data'])
         except Exception as e:
             logger.exception(f'处理消息错误：{e}')

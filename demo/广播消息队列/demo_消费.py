@@ -10,7 +10,7 @@ from dsConfigCenter import config_center
 from dsPyLib.mqueue.mq_fanout import 广播消费者类, 断开类型枚举
 
 
-def 消息处理(desc: str, data: Any) -> None:
+def 消息回调处理(desc: str, data: Any) -> None:
     print(f'{desc}: {data}')
 
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         配置=消息队列配置,
         virtual_host='Crypto',
         exchange_name='crypto.fanout.demo',
-        消息回调处理=消息处理,
+        消息回调=消息回调处理,
         连接成功回调=连接成功回调处理,
         连接断开回调=连接断开回调处理
     )
