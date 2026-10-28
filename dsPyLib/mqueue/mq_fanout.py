@@ -66,7 +66,15 @@ class 角色枚举(枚举基类):
     未知 = '未知'
 
 
-消息处理回调类型: TypeAlias = Callable[[str, Any], None]  # 实现形式：def 消息处理(desc: str, data: Any) -> None:
+class 断开类型枚举(枚举基类):
+    主动断开 = '主动断开'
+    被动断开 = '被动断开'
+    重连断开 = '重连断开'
+
+
+消息回调处理类型: TypeAlias = Callable[[str, Any], None]  # 实现形式：def 消息回调处理(desc: str, data: Any) -> None:
+连接成功回调处理类型: TypeAlias = Callable[[], None]  # 实现形式： def 连接成功回调处理() -> None:
+连接断开回调处理类型: TypeAlias = Callable[[断开类型枚举, Exception], None]  # 实现形式： def 连接断开回调处理(断开类型: 断开类型枚举, 原因: Exception) -> None:
 
 
 class 消息队列配置信息协议(Protocol):
@@ -78,10 +86,19 @@ class 消息队列配置信息协议(Protocol):
 
 class _基类(object):
 
-    def __init__(self, 配置: 消息队列配置信息协议, virtual_host: str, exchange_name: str):
+    def __init__(
+            self,
+            配置: 消息队列配置信息协议,
+            virtual_host: str,
+            exchange_name: str,
+            连接成功回调: Optional[连接成功回调处理类型] = None,
+            连接断开回调: Optional[连接断开回调处理类型] = None
+    ):
         self.配置 = 配置
         self.virtual_host = virtual_host
         self.exchange_name = exchange_name
+        self.连接成功回调 = 连接成功回调
+        self.连接断开回调 = 连接断开回调
 
         self._conn: Optional[Connection] = None
         self._channel: Optional[Channel] = None
@@ -89,7 +106,7 @@ class _基类(object):
         self._lock = threading.RLock()  # 线程锁
 
         # 重连相关
-        self._手动断开序数 = 0
+        self._主动断开序数 = 0
         self._重连中 = False
         self._停止重连 = threading.Event()
 
@@ -132,7 +149,7 @@ class _基类(object):
                 主线程                               重连线程
                 断开()
                     _停止重连.set()
-                    _手动断开序数 += 1
+                    _主动断开序数 += 1
                     close()
                     释放锁
                                                       _连接()          ← 此时才拿到锁
@@ -146,17 +163,25 @@ class _基类(object):
 
         with self._lock:
             try:
+                角色 = '未知角色'
+                if isinstance(self, 广播发布者类):
+                    角色 = '广播发布者'
+                if isinstance(self, 广播消费者类):
+                    角色 = '广播消费者'
+                logger.info(f'{角色} 开始连接...')
+
                 if self.已连接:
+                    self._连接成功处理()
                     return Ok(None)
 
                 # 如果是重连线程发起的重连，且当前已经设置了停止重连，则返回错误
                 if _来自重连 and self._停止重连.is_set():
-                    return Err(ConnectionError('重连已取消，不再连接'))
+                    raise ConnectionError('重连已取消，不再连接')
 
                 self._断开()  # 不会 set()，这样避免非主动断开导致重连线程退出
                 self._停止重连.clear()  # 连接期间允许重连
 
-                手动断开序数 = self._手动断开序数
+                主动断开序数 = self._主动断开序数
 
                 # 准备连接参数
                 parameters = pika.ConnectionParameters(
@@ -177,7 +202,7 @@ class _基类(object):
                 # Connection 连接建立后，IOLoop 自动在后台线程运行，不阻塞主线程(这是 SelectConnection, BlockingConnection 不具备的)
                 self._conn = Connection(
                     parameters=parameters,
-                    on_close_callback=lambda connection, reason: self._handle_close_callback(connection, reason, 手动断开序数),
+                    on_close_callback=lambda connection, reason: self._handle_close_callback(connection, reason, 主动断开序数),
                 )
 
                 # 打开一个新信道
@@ -190,9 +215,12 @@ class _基类(object):
                     durable=True,  # 长久保持
                 )
 
+                # 连接成功
+                self._连接成功处理()
                 return Ok(None)
             except Exception as e:
                 self._断开()
+                logger.error(f'连接失败：{e}')
                 return Err(e)
 
     def _断开(self) -> None:
@@ -209,7 +237,7 @@ class _基类(object):
                 局部变量 channel/conn 负责在置 None 之后仍能完成关闭。
         """
         with self._lock:
-            self._手动断开序数 += 1
+            self._主动断开序数 += 1
 
             channel, conn = self._channel, self._conn
             self._channel = None
@@ -225,20 +253,24 @@ class _基类(object):
                 except Exception as e:
                     logger.exception(f'关闭 {名称} 失败: {e!r}')
 
-    def _handle_close_callback(self, _, reason, 手动断开序数: int):
+    def _handle_close_callback(self, _, reason, 主动断开序数: int):
         # 在这里处理断线重连
-        # (self, connection, reason, 手动断开序数: int)
+        # (self, connection, reason, 主动断开序数: int)
 
-        # 手动断开序数是在连接时传入的，当手动断开时，该序数会增加1，这样就会和传入的参数不一致，从而判断出是手动断开
-        if self._手动断开序数 != 手动断开序数:
-            logger.info('手动断开')
+        # 主动断开序数 是在连接时传入的，当主动断开时，该序数会增加1，这样就会和传入的参数不一致，从而判断出是主动断开
+        if self._主动断开序数 != 主动断开序数:
+            logger.info('主动断开')
+            self._连接断开处理(断开类型=断开类型枚举.主动断开, 原因=reason)
             return
 
         # 意外断开则自动重连
         if self._重连中:
+            self._连接断开处理(断开类型=断开类型枚举.重连断开, 原因=reason)
             return
-        self._重连中 = True
+
         logger.info(f'意外断开：{reason!r}，开始重连')
+        self._重连中 = True
+        self._连接断开处理(断开类型=断开类型枚举.被动断开, 原因=reason)
         threading.Thread(target=self._重连循环, daemon=True, name='mq-reconnect').start()
 
     def _重连循环(self):
@@ -263,6 +295,16 @@ class _基类(object):
                 delay = min(delay * 2, 30.0)  # 退避策略：每失败一次，等待时间翻倍，30秒封顶，避免重连风暴
         finally:
             self._重连中 = False
+
+    def _连接成功处理(self):
+        logger.info('连接成功！')
+        if self.连接成功回调:
+            self.连接成功回调()
+
+    def _连接断开处理(self, 断开类型: 断开类型枚举, 原因: Exception):
+        logger.error(f'连接断开：{断开类型.name}, {原因}')
+        if self.连接断开回调:
+            self.连接断开回调(断开类型, 原因)
 
 
 class 广播发布者类(_基类):
@@ -300,10 +342,18 @@ class 广播发布者类(_基类):
 
 class 广播消费者类(_基类):
 
-    def __init__(self, 配置: 消息队列配置信息协议, virtual_host: str, exchange_name: str, 消息处理回调: 消息处理回调类型):
-        super().__init__(配置=配置, virtual_host=virtual_host, exchange_name=exchange_name)
+    def __init__(
+            self,
+            配置: 消息队列配置信息协议,
+            virtual_host: str,
+            exchange_name: str,
+            消息回调处理: 消息回调处理类型,
+            连接成功回调: Optional[连接成功回调处理类型] = None,
+            连接断开回调: Optional[连接断开回调处理类型] = None
+    ):
+        super().__init__(配置=配置, virtual_host=virtual_host, exchange_name=exchange_name, 连接成功回调=连接成功回调, 连接断开回调=连接断开回调)
 
-        self.消息处理回调: Optional[消息处理回调类型] = 消息处理回调
+        self.消息处理回调: Optional[消息回调处理类型] = 消息回调处理
 
     def _连接(self, _来自重连: bool = False) -> Result[None, Exception]:
         """

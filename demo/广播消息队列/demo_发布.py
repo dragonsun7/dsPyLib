@@ -6,7 +6,7 @@ import time
 
 from dsConfigCenter import config_center
 
-from dsPyLib.mqueue.mq_fanout import 广播发布者类
+from dsPyLib.mqueue.mq_fanout import 广播发布者类, 断开类型枚举
 from dsPyLib.utils.logging import logger
 
 
@@ -36,17 +36,27 @@ def 发布任务():
         time.sleep(1)
 
 
+def 连接成功回调处理() -> None:
+    print('绿灯亮起来')
+
+
+def 连接断开回调处理(断开类型: 断开类型枚举, 原因: Exception) -> None:
+    print(f'红灯亮起来, {断开类型.name}, {原因}')
+
+
 if __name__ == '__main__':
     消息队列配置 = config_center.get_rabbitmq(host='ali-hk')
-    发布者 = 广播发布者类(配置=消息队列配置, virtual_host='Crypto', exchange_name='crypto.fanout.demo')
+    发布者 = 广播发布者类(
+        配置=消息队列配置,
+        virtual_host='Crypto',
+        exchange_name='crypto.fanout.demo',
+        连接成功回调=连接成功回调处理,
+        连接断开回调=连接断开回调处理
+    )
     try:
-        logger.info('开始连接...')
         result = 发布者.连接()
         if result.is_err():
-            e = result.unwrap_err()
-            logger.error(f'发布者连接错误：{e}')
             raise SystemExit(-1)
-        logger.info('连接成功')
 
         发布任务()
     finally:
