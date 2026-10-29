@@ -125,9 +125,11 @@ class _基类(object):
         return 角色枚举.未知
 
     def 连接(self) -> Result[None, Exception]:
+        logger.warning(f'{self.角色.name} 开始主动连接...')
         return self._连接(_来自重连=False)
 
     def 断开(self) -> None:
+        # 断开的日志在 _handle_close_callback 中打印
         self._停止重连.set()  # 唤醒并终止重连线程(只有用户主动断开才 set)
         self._断开()
 
@@ -163,7 +165,7 @@ class _基类(object):
 
         with self._lock:
             try:
-                logger.info(f'{self.角色.name} 开始连接...')
+                logger.info(f'{self.角色.name} 开始 _连接()...')
 
                 if self.已连接:
                     return Ok(None)  # 这里就不触发 连接成功回调 了
@@ -213,7 +215,7 @@ class _基类(object):
                 return Ok(None)
             except Exception as e:
                 self._断开()
-                logger.exception(f'连接失败：{e}')
+                logger.exception(f'{self.角色.name} 连接失败：{e}')
                 return Err(e)
 
     def _断开(self) -> None:
@@ -244,7 +246,7 @@ class _基类(object):
                     if obj.is_open:
                         obj.close(timeout=3)
                 except Exception as e:
-                    logger.exception(f'关闭 {名称} 失败: {e!r}')
+                    logger.exception(f'{self.角色.name} 关闭 {名称} 失败: {e!r}')
 
     def _handle_close_callback(self, _, reason, 主动断开序数: int):
         # 在这里处理断线重连
@@ -252,7 +254,6 @@ class _基类(object):
 
         # 主动断开序数 是在连接时传入的，当主动断开时，该序数会增加1，这样就会和传入的参数不一致，从而判断出是主动断开
         if self._主动断开序数 != 主动断开序数:
-            logger.info('主动断开')
             self._连接断开处理(断开类型=断开类型枚举.主动断开, 原因=reason)
             return
 
@@ -261,7 +262,6 @@ class _基类(object):
             self._连接断开处理(断开类型=断开类型枚举.重连断开, 原因=reason)
             return
 
-        logger.info(f'意外断开：{reason!r}，开始重连')
         self._重连中 = True
         self._连接断开处理(断开类型=断开类型枚举.被动断开, 原因=reason)
         threading.Thread(target=self._重连循环, daemon=True, name='mq-reconnect').start()
@@ -280,17 +280,17 @@ class _基类(object):
 
                 result = self._连接(_来自重连=True)
                 if result.is_ok():
-                    logger.info('重连成功')
+                    logger.warning(f'{self.角色.name} 重连成功')
                     return
 
                 e = result.unwrap_err()
-                logger.error(f'重连失败: {e!r}')
+                logger.info(f'{self.角色.name} 重连失败: {e!r}')
                 delay = min(delay * 2, 30.0)  # 退避策略：每失败一次，等待时间翻倍，30秒封顶，避免重连风暴
         finally:
             self._重连中 = False
 
     def _连接成功处理(self):
-        logger.info('连接成功！')
+        logger.warning(f'{self.角色.name} 连接成功！')
         if self.连接成功回调:
             # 连接成功回调(为了防止回调异常触发断开，所以单独包一层try)
             try:
@@ -304,18 +304,19 @@ class _基类(object):
             用户的 连接断开回调 如果做阻塞操作（写数据库、发 HTTP、操作 UI），会卡住 IOLoop，导致心跳发不出去、后续帧处理延迟。
             所以把回调丢到独立线程执行
         """
-        tip = f'连接断开：{断开类型.name}, {原因!r}'
         if 断开类型 == 断开类型枚举.主动断开:
-            logger.info(tip)
-        else:
-            logger.error(tip)
+            logger.warning(f'{self.角色.name} 主动断开')
+        if 断开类型 == 断开类型枚举.被动断开:
+            logger.warning(f'{self.角色.name} 被动断开：{原因!r}，开始重连...')
+        if 断开类型 == 断开类型枚举.重连断开:
+            logger.info(f'{self.角色.name} 重连断开：{原因!r}，开始重连...')
 
         if self.连接断开回调:
             def _run():
                 try:
                     self.连接断开回调(断开类型, 原因)
                 except Exception as e:
-                    logger.exception(f'连接断开回调 执行失败：{e}')
+                    logger.exception(f'{self.角色.name} 连接断开回调 执行失败：{e}')
 
             threading.Thread(target=_run, daemon=True).start()
 
