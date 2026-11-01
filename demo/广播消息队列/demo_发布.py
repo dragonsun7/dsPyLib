@@ -45,7 +45,7 @@ def 连接断开回调处理(断开类型: 断开类型枚举, 原因: Exception
 
 
 if __name__ == '__main__':
-    消息队列配置 = config_center.get_rabbitmq(host='ali-hk')
+    消息队列配置 = config_center.get_rabbitmq(host='ali-cd')
     发布者 = 广播发布者类(
         配置=消息队列配置,
         virtual_host='Crypto',
