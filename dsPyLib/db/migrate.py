@@ -81,7 +81,7 @@ class DBMigrate(object):
 
                 # 7. 执行其它任务(例如：创建 触发器/函数/视图/，清除/写入初始数据等
                 self.after(db=self.db)
-                
+
                 logger.info('创建表结构完成！')
         except Exception as e:
             logger.error(f"创建新结构时发生错误，已回滚: {e}")
