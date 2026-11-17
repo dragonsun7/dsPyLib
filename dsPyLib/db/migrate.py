@@ -17,16 +17,17 @@ __date__ = '2022-05-16 10:26:48'
     用法：
         1. 派生DBMigrate类
         2. 根据情况重写下面的函数：
-            def views_for_drop(self) -> list[str]:                      指定要删除的视图名称列表
-            def funcs_for_drop(self) -> list[str]:                      指定要删除的函数名称列表
-            def tables_for_drop(self) -> list[type[DBStandardModel]]:   指定要删除的表结构模型列表    
-            def tables_for_create(self) -> list[type[DBStandardModel]]: 指定要创建的表结构模型列表
+            def views_for_drop(self) -> List[str]:                      指定要删除的视图名称列表
+            def funcs_for_drop(self) -> List[str]:                      指定要删除的函数名称列表
+            def tables_for_drop(self) -> List[type[DBStandardModel]]:   指定要删除的表结构模型列表    
+            def tables_for_create(self) -> List[type[DBStandardModel]]: 指定要创建的表结构模型列表
             def after(self, db):                                        执行其它任务(例如：创建 触发器/函数/视图/，清除/写入初始数据等)
         3. 调用 execute()
 """
 
 import logging
 import os
+from typing import Type, List
 
 from dsPyLib.utils.logging import logger
 from .db import get_database
@@ -47,52 +48,61 @@ class DBMigrate(object):
                 peewee_logger.addHandler(logging.StreamHandler())
 
     def execute(self):
-        with self.db.atomic():  # 可回滚
+        # 第一阶段：清理旧结构 (不带 atomic，防止锁表太久)
+        try:
             # 1. 删除视图
-            view_names = self.views_for_drop()
-            for view_name in view_names:
+            for view_name in self.views_for_drop():
                 self._drop_view(name=view_name)
 
             # 2. 删除函数
-            func_names = self.funcs_for_drop()
-            for func_name in func_names:
+            for func_name in self.funcs_for_drop():
                 self._drop_func(name=func_name)
 
-            # 3. 删除表
+            # 3. 删除表 (删表通常不建议放事务，一旦删了就没法回滚了)
             models = self.tables_for_drop()
-            self.db.drop_tables(models=models)
+            if models:
+                self.db.drop_tables(models=models, safe=True)
+        except Exception as e:
+            logger.error(f"删除旧表时发生错误: {e}")
+            raise
 
-            # 4. 创建表
-            models = self.tables_for_create()
-            self.db.create_tables(models=models)
+        # 第二阶段：创建新结构 (放事务里，可回滚，确保建表完整)
+        try:
+            with self.db.atomic():
+                # 4. 创建表
+                models = self.tables_for_create()
+                self.db.create_tables(models=models)
 
-            # 5. 创建默认函数
-            self._create_default_funcs()
+                # 5. 创建默认函数
+                self._create_default_funcs()
 
-            # 6. 创建默认触发器
-            self._create_default_triggers(models=models)
+                # 6. 创建默认触发器
+                self._create_default_triggers(models=models)
 
-            # 7. 执行其它任务(例如：创建 触发器/函数/视图/，清除/写入初始数据等
-            self.after(db=self.db)
-
-            logger.info('创建表结构完成！')
+                # 7. 执行其它任务(例如：创建 触发器/函数/视图/，清除/写入初始数据等
+                self.after(db=self.db)
+                
+                logger.info('创建表结构完成！')
+        except Exception as e:
+            logger.error(f"创建新结构时发生错误，已回滚: {e}")
+            raise
 
     # ---------- 重载 ---------- #
 
     # 重载：指定要删除的视图名称列表
-    def views_for_drop(self) -> list[str]:
+    def views_for_drop(self) -> List[str]:
         return []
 
     # 重载：指定要删除的函数名称列表
-    def funcs_for_drop(self) -> list[str]:
+    def funcs_for_drop(self) -> List[str]:
         return []
 
     # 重载：指定要删除的表结构模型列表
-    def tables_for_drop(self) -> list[type[DBStandardModel]]:
+    def tables_for_drop(self) -> List[Type[DBStandardModel]]:
         return []
 
     # 重载：指定要创建的表结构模型列表
-    def tables_for_create(self) -> list[type[DBStandardModel]]:
+    def tables_for_create(self) -> List[Type[DBStandardModel]]:
         return []
 
     # 重载: 执行其它任务(例如：创建 触发器/函数/视图/，清除/写入初始数据等
@@ -121,14 +131,16 @@ class DBMigrate(object):
             self.db.execute_sql(sql=sql)
 
     # 创建默认触发器
-    def _create_default_triggers(self, models: list[type[DBStandardModel]]):
+    def _create_default_triggers(self, models: List[Type[DBStandardModel]]):
         # 创建默认的updated字段的触发器
         sql_file = os.path.join(os.path.dirname(__file__), 'sql', 'create_trigger_updated.sql')
+        with open(sql_file, 'r', encoding='utf8') as fp:
+            sql_template = fp.read()
+
         for model_class in models:
-            with open(sql_file, 'r', encoding='utf8') as fp:
+            if hasattr(model_class, 'updated'):
                 table_name = model_class._meta.table_name
-                sql = fp.read()
-                sql = sql.replace('__table_name__', table_name)
+                sql = sql_template.replace('__table_name__', table_name)
                 self.db.execute_sql(sql=sql)
 
     # @staticmethod
